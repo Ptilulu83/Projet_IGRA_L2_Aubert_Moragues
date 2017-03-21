@@ -1,7 +1,9 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "curve.h"
+#include "game.h"
 #include "util.h"
 #include "mydata.h"
 #include "drawings.h"
@@ -316,6 +318,25 @@ void draw_bezier_curves_clip(cairo_t *cr , Curve_infos *ci , double theta, gpoin
 	}
 }
 
+void draw_cannon(cairo_t * cr, gpointer data)
+{
+	Mydata * my = get_mydata(data);
+
+	Game * game = &my->game;
+
+	game->cannon_sprite = cairo_image_surface_create_from_png("resource/Cannon.png");
+
+	int sprite_w = cairo_image_surface_get_width(game->cannon_sprite);
+	int sprite_h = cairo_image_surface_get_height(game->cannon_sprite);
+
+	double xA = my->win_width/2 - sprite_w/2, yA = my->win_height/2 - sprite_h/2;
+
+	cairo_set_source_surface(cr, game->cannon_sprite, xA, yA);
+	cairo_rectangle(cr, xA, yA, sprite_w, sprite_h);
+	cairo_fill(cr);
+
+	cairo_surface_destroy(game->cannon_sprite);
+}
 
 gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
 	Mydata * my = get_mydata(data);
@@ -383,6 +404,8 @@ gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
 	//char msg[200];
 	//g_sprintf(msg,"on area draw: %dx%d",gtk_widget_get_allocated_width(my->area),gtk_widget_get_allocated_width(my->area));
 	//set_status(my->status,msg);
+
+	draw_cannon(cr, my);
 	return TRUE;
 }
 
@@ -608,6 +631,17 @@ gboolean on_area_motion_notify (GtkWidget *area, GdkEvent *event, gpointer data)
 				break;	
 		}
 	}
+
+	int x_center = my->win_width;
+	int y_center = my->win_height;
+
+	int vx = click_x - x_center;
+	int vy = click_y - y_center;
+
+	int n = sqrt(pow(vx, 2)+pow(vy, 2));
+
+	
+
 	refresh_area(area);
 	return TRUE;
 }

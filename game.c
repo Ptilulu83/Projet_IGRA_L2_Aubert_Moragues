@@ -2,7 +2,7 @@
 
 #include "game.h"
 
-void game_init()
+void game_init(Game * game)
 {
-	cannon_sprite = cairo_image_surface_create_from_png("resource/Cannon.png")
+	game->cannon_sprite = NULL;
 }

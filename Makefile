@@ -12,7 +12,7 @@ LIBS    = $$(pkg-config gtk+-3.0 --libs)
 
 # Mettre ici la liste des fichiers .c separes par un espace ;
 # si besoin on peut eclater la liste sur plusieurs lignes avec "\".
-CFILES  = Tp06.c curve.c util.c mydata.c drawings.c menu.c gui.c font.c 
+CFILES  = Tp06.c curve.c util.c mydata.c drawings.c menu.c gui.c font.c game.c 
 
 # Mettre ici le nom de l'executable.
 EXEC    = Tp06

@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 
 #include "curve.h"
+#include "game.h"
 #include "mydata.h"
 
 // Cette fonction permet de tester si le data que l’on a recuper´e dans
@@ -31,6 +32,7 @@ void init_mydata(Mydata *my){
 	my->edit_mode=EDIT_ADD_CURVE;
 	my->bsp_mode=BSP_OPEN;
 	init_curve_infos (&my->curve_infos);
+	game_init(&my->game);
 }
 
 void set_edit_mode (Mydata * my, int mode){

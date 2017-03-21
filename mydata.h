@@ -3,6 +3,8 @@
 
 #define MYDATA_MAGIC 0x46EA7E05
 
+#include"game.h"
+
 typedef unsigned int uint;
 
 typedef enum {
@@ -70,6 +72,8 @@ typedef struct {
 	uint Magicnumber;	// 3 is a magic number
 
 	Curve_infos curve_infos;
+
+	Game game;
 } Mydata;
 
 Mydata *get_mydata (gpointer data);
