@@ -8,7 +8,7 @@ RM      = rm -f
 # Si vous voulez utiliser gdb, rajouter "-g" a la fin de CFLAGS ;
 # Si vous utilisez des fonctions de <math.h>, rajoutez "-lm" a la fin de LIBS.
 CFLAGS  = $$(pkg-config gtk+-3.0 --cflags) -Wall -std=c99 -pedantic -O2
-LIBS    = $$(pkg-config gtk+-3.0 --libs)
+LIBS    = $$(pkg-config gtk+-3.0 --libs) -lm
 
 # Mettre ici la liste des fichiers .c separes par un espace ;
 # si besoin on peut eclater la liste sur plusieurs lignes avec "\".

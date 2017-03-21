@@ -4,8 +4,10 @@
 typedef struct
 {
 	cairo_surface_t * cannon_sprite;
+	double cannon_angle;
 }Game;
 
 void game_init();
+void udapte_cannon_angle();
 
 #endif

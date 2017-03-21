@@ -318,9 +318,11 @@ void draw_bezier_curves_clip(cairo_t *cr , Curve_infos *ci , double theta, gpoin
 	}
 }
 
-void draw_cannon(cairo_t * cr, gpointer data)
-{
+void draw_cannon(cairo_t * cr, gpointer data){
 	Mydata * my = get_mydata(data);
+
+	int centre_x=my->win_width/2;
+	int centre_y=my->win_height/2;
 
 	Game * game = &my->game;
 
@@ -329,7 +331,13 @@ void draw_cannon(cairo_t * cr, gpointer data)
 	int sprite_w = cairo_image_surface_get_width(game->cannon_sprite);
 	int sprite_h = cairo_image_surface_get_height(game->cannon_sprite);
 
-	double xA = my->win_width/2 - sprite_w/2, yA = my->win_height/2 - sprite_h/2;
+	double xA = centre_x - sprite_w/2, yA = centre_y - sprite_h/2;
+
+	cairo_identity_matrix (cr);
+	cairo_translate (cr, centre_x, centre_y);
+	cairo_rotate (cr, my->game.cannon_angle);
+	//cairo_scale (cr, 0.8, 0.8);
+	cairo_translate (cr, -centre_x, -centre_y);
 
 	cairo_set_source_surface(cr, game->cannon_sprite, xA, yA);
 	cairo_rectangle(cr, xA, yA, sprite_w, sprite_h);
@@ -591,6 +599,8 @@ gboolean on_area_motion_notify (GtkWidget *area, GdkEvent *event, gpointer data)
 	my->click_x = evm->x;
 	my->click_y = evm->y;
 
+	udapte_cannon_angle(my);
+
 	if (my->click_n == 1 && my->show_edit == TRUE){
 		int tmp;
 		switch(my->edit_mode){
@@ -631,16 +641,6 @@ gboolean on_area_motion_notify (GtkWidget *area, GdkEvent *event, gpointer data)
 				break;	
 		}
 	}
-
-	int x_center = my->win_width;
-	int y_center = my->win_height;
-
-	int vx = click_x - x_center;
-	int vy = click_y - y_center;
-
-	int n = sqrt(pow(vx, 2)+pow(vy, 2));
-
-	
 
 	refresh_area(area);
 	return TRUE;
