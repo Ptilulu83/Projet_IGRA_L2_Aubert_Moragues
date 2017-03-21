@@ -1,0 +1,8 @@
+curve.o: curve.c curve.h
+drawings.o: drawings.c curve.h util.h mydata.h drawings.h menu.h font.h
+font.o: font.c font.h
+gui.o: gui.c curve.h mydata.h util.h drawings.h menu.h gui.h
+menu.o: menu.c curve.h mydata.h util.h drawings.h menu.h gui.h
+mydata.o: mydata.c curve.h mydata.h
+Tp06.o: Tp06.c curve.h util.h mydata.h drawings.h menu.h gui.h
+util.o: util.c util.h

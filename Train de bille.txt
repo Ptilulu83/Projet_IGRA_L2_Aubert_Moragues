@@ -1,0 +1,164 @@
+Train de bille
+vont vite (40 première)
+puis vitesse faible 
+canon au centre
+100 billes
+
+Cannon 
+	au centre
+	tourne dierction souris
+	une bille par clic
+	dirrection du tir
+	bille tirée
+		percute une bille
+		sort de la fenettre
+
+si moins de 3
+	continue
+quand 3 billes ou plus de la meme couleur 
+	supprimées
+	crée un trou dans le train
+	combo 2
+	si bille de meme couleur >= 3 de meme couleur de pars et d'autre 
+		groupe avant recule jusqu'a toucher groupe arrière puis bille de meme couleur suprimé
+		pas de trou
+		les groupe avant le groupe qui recule reste immobile
+	combo 3 si de pars et d'autre de la zone supprimer bille de meme couleur >=3
+		tout l'avant du train recule le groupe est supprimer
+		le train peu revenir dans la source
+	combo 4+  pas d'effet suplémentaire 
+		sauf si version 2
+
+calcul Score
+
+	supprime k bille
+		score +=10*k
+	combo niveau i de k bille
+		score += 10*k*2^i
+
+cahier des charges 
+	respecter la règle du 1
+	soigner moteur du jeux
+	effet animation graphique /bonus
+lancement du programe
+	ecran d'accueil
+	titre auteur 
+	image fond
+	"press a button"
+Barre de menu
+	game
+		start
+		pause
+		new
+		quit
+	level
+		edit 
+		new
+		save
+	help
+		about
+fenetre du jeu 
+en haut 
+	titre
+	niveau
+	score
+	vie
+canon
+	au milieu
+	depend du niveau
+niveau
+	1 ou plusieur 
+	(niveau)
+	chaque rail
+		source trou noir
+	image fond
+	rail 
+		B-spline cubique uniforme prolongées
+		structures TP5
+		epaisseur
+	cannon
+		tourne en direction de la souris
+		V
+			Vx = sx - cx
+			Vy = sy - cy
+		n=(Vx^2+vy^2)^(1/2)
+		V/n
+		alpha=arcos(Vx/n)
+		si vy/n < 0 alors alpha <- -alpha
+		moralité dessiner canon horizontal
+		avant dessin cairo-translate (xc,yc)
+							rotate(alpha)
+							translate(-xc,-yc)
+		tir on peut tirer jusqua 10 bille à la suite
+			chacune a x y directions
+		munition
+			espaces echange avec suivante
+		fin de partie affichage meilleur scores/save
+		niveau 
+			gagné -> suivant
+			perdu -> niveau 1
+			dernier niveau -> niveau 1 avec plus de bille plus vite
+editeur de niveau
+	interface tp6 épurée
+	curve control
+	move cannon
+	choisir image fond
+	nb bille bebut totale
+	chager sauver niveeau
+	niveau = fichier texte repertoir levls
+Effet en +
+	mise a l'echal general
+	bille
+		cercle couleur
+		image (marbre)
+		tourner bille avec rotation dans le plan réel
+	explosion billes
+		diamètre couleur
+	animer echange
+		bille canon
+	accelerer / freiner le tran
+	partie perdu = acceleration dans le trou noir
+
+	Bonus
+		billes spéciales
+		bille qui fait reculer le train 
+		fleches
+
+realisation
+	etat 
+		du jeux
+		du cannon
+		du tran
+		des combos
+	game states
+		GS_HELLO, GS_PLAYING,GS_PAUSE,GS_WON,GS_LOST
+
+	Module game.c .h
+		game
+			shot_list
+				shot count
+				shots[]
+					x,y
+					dx,dy
+					colon
+			canon
+				cx,cy
+				angle
+				ammo1 ammo2
+
+			track list
+				track count
+				tracks[]
+					marble count
+					marbles[]
+						x,y
+						t sur la courbe
+						colon
+					state
+			level list
+				level count
+				level[]
+					curve infos
+					canon_x , canon_y
+					marbles_info
+					marbles_total
