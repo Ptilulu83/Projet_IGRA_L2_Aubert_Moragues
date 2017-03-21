@@ -17,7 +17,7 @@ int add_curve (Curve_infos * ci){
 	}
 	ci->current_curve=ci->curve_list.curve_count;							//n==current_curve
 	ci->curve_list.curve_count++;
-	printf("Curve %d\n",ci->curve_list.curve_count);
+	//printf("Curve %d\n",ci->curve_list.curve_count);
 	ci->curve_list.curves[ci->current_curve].control_count=0;
 	ci->curve_list.curves[ci->current_curve].shift_x=0;
 	ci->curve_list.curves[ci->current_curve].shift_y=0;
@@ -33,7 +33,7 @@ int add_control (Curve_infos * ci, double x, double y){
 		ci->current_control=-1;
 		return -1;
 	}
-	printf("control %d : x=%d, y=%d \n",ci->current_control,(int) x ,(int) y );
+	//printf("control %d : x=%d, y=%d \n",ci->current_control,(int) x ,(int) y );
 	ci->current_control= ci->curve_list.curves[ci->current_curve].control_count;
 	ci->curve_list.curves[ci->current_curve].control_count++;
 	ci->curve_list.curves[ci->current_curve].controls[ci->current_control].x=x;
