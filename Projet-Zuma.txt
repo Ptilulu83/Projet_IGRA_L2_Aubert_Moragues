@@ -1,0 +1,503 @@
+Projet Zuma's revenge
+
+
+1) Déroulement du jeu
+
+Après un écran d'accueil, apparaît un rail en forme de courbe, qui commence par
+une source et finit par un trou noir.
+
+Un "train" de 40 billes de couleurs sort rapidement de la source, puis le train 
+passe à une vitesse faible et le joueur peut commencer à tirer.
+
+La queue du train continue à avancer avec l'apparition continuelle de nouvelles 
+billes de la source, qui pousse le train en avant. Ce train cesse d'être alimenté
+après apparition de 60 billes supplémentaires.
+
+La partie est perdue si la tête du train pénètre dans le trou noir.
+La partie est gagnée si toutes les billes sont supprimées par le joueur.
+
+Vers le centre de la fenêtre il y a un canon, qui tourne en direction de la souris.
+Chaque fois que le joueur clique, une bille de couleur est tirée du canon.
+La balle part tout droit, et soit elle touche une bille du train, soit elle sort
+de la fenêtre et disparaît. Si la bille tirée touche une bille du train, elle
+vient s'insérer avant ou après dans le train.
+
+Lors de l'insertion, on compte le nombre n de billes adjacentes de même couleur 
+que la bille insérée : si n >= 3, alors le groupe est supprimé du rail.
+
+Dans ce cas, on compte ensuite le nombre p de billes de la même couleur de part
+et d'autre du groupe supprimé :
+ - si p < 3, la partie avant reste immobile, tandis que la partie arrière
+   continue à avancer ;
+ - sinon c'est un "combo 2" : la partie avant recule jusqu'à toucher la
+   partie arrière (qui a continué à avancer), puis le groupe de p billes est
+   supprimé.
+
+À la fin d'un combo 2 on compte ensuite le nombre q de billes de la même couleur
+de part et d'autre du groupe supprimé : si q >= 3 alors c'est un "combo 3" : la
+partie avant recule jusqu'à toucher la partie arrière (qui a continué à avancer)
+puis pousse tout le train en arrière, qui rentre à reculons dans la source, de
+n+p+q billes.
+
+Et ainsi de suite pour les combos supérieurs (mais sans autre effet sur le train).
+
+
+2) Calcul du score :
+
+Lorsqu'on supprime un groupe de k boules, le score est augmenté de k*10.
+
+Lors de chaque combo de niveau i pour k boules, le score est augmenté de 
+k*10 * 2^i. Exemple :
+
+  EAABCCCCD + D + DDCBBAF
+  EAABCCCC + CBBAF         s += 4*10
+  EAAB + BBAF              s += 5*10 * 2^2  (combo 2)
+  EAA + AF                 s += 3*10 * 2^3  (combo 3)
+  E + F                    s += 3*10 * 2^4  (combo 4)
+  EF
+ 
+
+3) Cahier des charges
+
+- Au lancement du programme il y a un écran d'accueil avec : titre, auteurs,
+image fond, "pressez une touche".
+
+- barre menu : (à améliorer)
+  game / start, pause, new, quit
+  level / edit, new, save
+  help / about
+
+- fenêtre de jeu : 
+  en haut : titre, niveau, score
+  canon au milieu (pas forcément, dépend du niveau)
+  un rail ou plusieurs
+  chaque rail commence par une source et est terminé par un trou noir
+  image fond selon niveau
+
+- les rails sont des B-splines cubiques uniformes avec extrémités prolongées,
+  comme vu en cours. Ils sont mémorisés avec la structure de données du TP5.
+  Ils sont dessinés avec une certaine épaisseur, voire avec plusieurs épaisseur 
+  et un dégradé de couleurs.
+
+- le canon tourne avec la souris
+  clic souris envoie une balle de couleur
+  on peut envoyer des balles à la suite (jusqu'à 10 par exemple)
+  chaque balle continue tout droit jusqu'à rencontrer un obstacle ou une bille
+  du train.
+
+- Munitions : la couleur de la bille du canon est choisie au hasard, parmi les
+  couleurs présentes dans le train.
+  on voit sur le canon la bille qui va être tirée, et celle d'après
+  La barre d'espace permute les 2 billes.
+  Ces munitions sont mises à jour si des couleurs disparaissent des rails.
+
+- affichage meilleurs scores en fin de partie, et sauvegarde
+
+- niveaux
+  lorsqu'un niveau est gagné, passage automatique niveau par niveau
+  si perdu, on recommence le niveau courant
+  si dernier niveau atteint, retour au premier avec des boules en plus et
+  une circulation 50% plus rapide
+
+- éditeur de niveau : avec l'interface du TP6 apurée
+  boutons radio add/move/remove curve et control
+  chaque niveau : image fond, position canon, courbes, 
+    champs de saisie pour : nb billes début et total, vitesse
+  on peut charger/sauver un niveau.
+  niveau = fichier texte dans le répertoire des niveaux Levels/
+
+- effets supplémentaires :
+    mise à l'échelle générale selon taille fenêtre, en conservant ratio 
+     (à prévoir dès le début)
+    billes = cercle ou marbre ; rotation billes
+    disparition billes éclatées
+    animation échange billes dans canon
+    accélération/freinage du train
+
+- bonus :
+    bille spéciale qui permet de tirer d'autres billes (flèche ?)
+    bille qui fait reculer le train 
+    ...
+
+
+4) Réalisation
+
+États : du jeu, du canon, du train, des combos ?
+
+État du jeu game_state : GS_HELLO, GS_PLAYING, GS_PAUSE, GS_WON, GS_LOST.
+Le timer est actif pendant l'état GS_PLAYING.
+
+Modules : un seul module game
+
+Shot_list : tableau de billes tirées shots, nombre de billes shot_count
+Pour chaque bille :
+  vecteur déplacement, coordonnée, numéro couleur
+
+Track_list : tableau de voies tracks, nombre de voies track_count
+ne pas stocker dans la structure des courbes et points de contrôle,
+mais avec numéro des courbes correspondantes.
+
+Pour chaque voie, stoque échantillonnage + tableau de billes + first_visible
+
+Pour chaque bille :
+  numéro couleur, coordonnées, étape éclatement
+On ne stocke pas les tronçons adjacents, on teste les distances au moment voulu
+
+Calcul position des billes sur les rails :
+- échantillonnage et stockage
+- paramètre t et interpolation
+- recherche incrémentale puis dichotomique à distance fixée, dans les 2 sens
+- utilisation : distance = diamètre pour pousser, ou = pas pour la vitesse
+  selon framerate (par exemple diamètre / framerate, soit 1 bille/seconde)
+
+Calcul collisions
+- recherche bille A la plus proche (distance au carré)
+- si d <= diametre + epsilon alors bingo
+- point d'insertion : calculer positions des billes virtuelles B avant et après A,
+  on insère à l'endroit de la plus proche, dans la position virtuelle. 
+  Cas particulier : extrémité de rail (dans ce cas, position symétrique).
+
+Attention éliminer multi clics : 
+lorsque 2 clics rapprochés, on_area_button press appelé 3 fois, avec evb->type = 
+  GDK_BUTTON_PRESS (1er clic)
+  GDK_BUTTON_PRESS (2e clic)
+  GDK_2BUTTON_PRESS (double clic détecté)
+idem triples clics et GDK_3BUTTON_PRESS.
+-> ne traiter que lorsque evb->type ==  GDK_BUTTON_PRESS.
+
+
+5) Rendu
+
+  source avant lundi 24 avril 12h
+  présentation sur machine mardi 25 avril 13h-17h : 20mn/projet
+  monôme ou binôme (pas noté pareil)
+  session 2 : mardi 13 juin 13h-16h : TP 3h noté
+
+
+6) Exemple de types pour le module game :
+
+#include <gtk/gtk.h>
+#include "curve.h"
+
+typedef enum { GS_HELLO, GS_PLAYING, GS_PAUSE, GS_WON, GS_LOST } Game_state;
+typedef enum { TS_INTRO, TS_NORMAL, TS_COMBO2, TS_COMBO3} Track_state;
+
+#define SHOT_MAX       10
+#define SHOT_SPEED      5
+#define TRACK_MAX      10
+#define MARBLE_MAX    200
+#define SAMPLE_MAX   1000 
+#define LEVEL_MAX      10
+#define SAMPLE_THETA    0.05
+
+typedef struct {
+  double cx, cy;    // centre canon
+  double angle;     // en radians
+  int ammo1, ammo2;
+} Canon;
+
+typedef struct {
+  double x, y;      // coordonnées centre
+  double dx, dy;    // vecteur déplacement
+  int color;
+} Shot;
+
+typedef struct {
+  int shot_count;
+  Shot shots[SHOT_MAX];
+} Shot_list;
+
+typedef struct {
+  double x, y;      // coordonnées centre
+  double t;         // paramètre dans l'échantillonnage
+  int color;
+  int is_combo_end; // ou encore, facteur vitesse et direction ?
+  int step_explode;
+} Marble;
+
+typedef struct {
+  int    sample_count;          // échantillonnage courbe
+  double sample_x[SAMPLE_MAX], 
+         sample_y[SAMPLE_MAX];
+  int marble_count;
+  int first_visible;
+  Marble marbles[MARBLE_MAX];
+  Track_state state;
+} Track;
+
+typedef struct {
+  int track_count;
+  Track tracks[TRACK_MAX];
+} Track_list;
+
+typedef struct {
+  Curve_infos curve_infos;
+  double canon_x, canon_y;
+  int marbles_intro, marbles_total;
+} Level;
+
+typedef struct {
+  int level_count;
+  Level levels[LEVEL_MAX];
+} Level_list;
+
+typedef struct {
+  Game_state state;
+  int current_level;
+  int score;
+  Canon canon;
+  Shot_list shot_list;
+  Track_list track_list;
+  Level_list level_list;
+  GRand *g_rand;
+} Game;
+
+
+Remarques :
+  - Game game mémorisé dans Mydata
+  - le module game ne connait pas Mydata
+
+
+7) Exemple de code pour chercher les boules proches
+
+// dans le module curve :
+
+
+/* Échantillonnage et stockage des courbes */
+
+void store_sample (double x, double y,
+  double sx[], double sy[], int *ind, int ind_max)
+{
+  if (*ind >= ind_max) {
+    fprintf (stderr, "%s: capacity exceeded \n", __func__);
+    return;
+  }
+  sx[*ind] = x;
+  sy[*ind] = y;
+  *ind += 1;
+}
+
+
+/* Échantillonne une courbe de Bézier avec le pas théta.
+ * Stocke les points dans sx[0..ind_max-1], sy[0..ind_max-1] à partir de ind. 
+ * Au retour, ind est le nouveau point d'insertion.
+ * Fct inspirée de drawings.c:generate_bezier_path() du TP6 (supprimée ici)
+*/
+void sample_bezier_curve (Control bez_points[4], double theta,
+  double sx[], double sy[], int *ind, int ind_max, int is_first)
+{
+  double x, y, bx[4], by[4], t;
+
+  for (int j = 0; j <= 3 ; j++) {
+      bx[j] = bez_points[j].x;
+      by[j] = bez_points[j].y;
+  }
+
+  for (t = is_first ? 0.0 : theta; t < 1.0; t += theta) {
+    x = compute_bezier_cubic (bx, t);
+    y = compute_bezier_cubic (by, t);
+    store_sample (x, y, sx, sy, ind, ind_max);
+  }
+
+  if (t < 1.0) {
+    x = compute_bezier_cubic (bx, 1.0);
+    y = compute_bezier_cubic (by, 1.0);
+    store_sample (x, y, sx, sy, ind, ind_max);
+  }
+}
+
+
+/* Calcule les coordonnées (x,y) du point de coordonnées t à partir
+ * de l'échantillonnage sx[],sy[]. t est un réel dans [0..tmax-1].
+ * Renvoie TRUE si t est bien dans l'intervalle ;
+ * sinon renvoie FALSE et met dans (x,y) le premier ou dernier point.
+ * RQ actuellement on ne se sert pas du retour.
+*/
+int interpolate_samples (double sx[], double sy[], double t, int tmax,
+  double *x, double *y)
+{
+  if (t <= 0) {
+    *x = sx[0];
+    *y = sy[0];
+    return t == 0;
+  } 
+  if (t >= tmax-1) {
+    *x = sx[tmax-1];
+    *y = sy[tmax-1];
+    return t == tmax-1;
+  } 
+  int i = t;
+  double u = t-i;
+  *x = sx[i]*(1-u) + sx[i+1]*u;
+  *y = sy[i]*(1-u) + sy[i+1]*u;
+  return 1;
+}
+
+
+/* Étant donné le point A de paramètre tA,
+ * Calcule les coordonnées du point B(xB,yB) de paramètre tB,
+ * situé à la distance |dist| de A, après ou avant.
+ * Les tableaux sx[],sy[] ont leur indice dans [0..tmax-1].
+ * Renvoie tB, ou -1 si tB est hors tableau.
+*/
+
+double compute_distant_point_forward (double sx[], double sy[], double tA, int tmax,
+  double dist, double *xB, double *yB)
+{
+  double xA, yA;
+  interpolate_samples (sx, sy, tA, tmax, &xA, &yA);
+
+  if (dist == 0) {
+    *xB = xA; *yB = yA;
+    return (tA >= 0 && tA <= tmax-1) ? tA : -1;
+  }
+
+  double t, m0, m1, dx, dy, d2 = 0, dist2 = dist*dist, epsilon = 0.1;
+
+  // Recherche un point qui dépasse |dist|.
+  // On fait une itération de plus (t <= tmax-1 +1) pour atteindre tmax-1
+  // en effet si t > tmax-1 alors interpolate_samples prend t = tmax-1
+  for (t = tA+1.0; t <= tmax-1 +1; t += 1.0) { 
+    interpolate_samples (sx, sy, t, tmax, xB, yB);
+    dx = *xB - xA; dy = *yB - yA; d2 = dx*dx + dy*dy;
+    if (d2 > dist2) break;
+  }
+  if (d2 < dist2) return -1;
+  m0 = t-1.0; m1 = t;
+
+  // Recherche dichotomique jusqu'à la précision epsilon
+  while (m1-m0 > 0) {
+    t = (m0+m1)/2.0;
+    interpolate_samples (sx, sy, t, tmax, xB, yB);
+    dx = *xB - xA; dy = *yB - yA; d2 = dx*dx + dy*dy;
+    if (d2 < dist2-epsilon) m0 = t;
+    else if (d2 > dist2+epsilon) m1 = t; 
+    else break; // Précision suffisante
+  }
+  return t;
+}
+
+
+double compute_distant_point_backward (double sx[], double sy[], double tA, int tmax,
+  double dist, double *xB, double *yB)
+{
+  double xA, yA;
+  interpolate_samples (sx, sy, tA, tmax, &xA, &yA);
+
+  if (dist == 0) {
+    *xB = xA; *yB = yA;
+    return (tA >= 0 && tA <= tmax-1) ? tA : -1;
+  }
+
+  double t, m0, m1, dx, dy, d2 = 0, dist2 = dist*dist, epsilon = 0.1;
+
+  // Recherche un point qui dépasse |dist|.
+  // On fait une itération de plus (t >= 0 -1) pour atteindre 0
+  // en effet si t < 0 alors interpolate_samples prend t = 0
+  for (t = tA-1.0; t >= 0 -1; t -= 1.0) {
+    interpolate_samples (sx, sy, t, tmax, xB, yB);
+    dx = *xB - xA; dy = *yB - yA; d2 = dx*dx + dy*dy;
+    if (d2 > dist2) break;
+  }
+  if (d2 < dist2) return -1;
+  m0 = t; m1 = t+1.0;
+
+  // Recherche dichotomique jusqu'à la précision epsilon
+  while (m1-m0 > 0) {
+    t = (m0+m1)/2.0;
+    interpolate_samples (sx, sy, t, tmax, xB, yB);
+    dx = *xB - xA; dy = *yB - yA; d2 = dx*dx + dy*dy;
+    if (d2 < dist2-epsilon) m1 = t;
+    else if (d2 > dist2+epsilon) m0 = t; 
+    else break; // Précision suffisante
+  }
+  return t;
+}
+
+
+// Dans le module game :
+
+void sample_curve_to_track (Curve *curve, Track *track, double theta)
+{
+  Control bez_points[4];
+  int ind = 0;
+
+  if (curve->control_count < 3) return;
+
+  compute_bezier_points_prolong_first (curve, bez_points);
+  sample_bezier_curve (bez_points, theta, 
+    track->sample_x, track->sample_y, &ind, SAMPLE_MAX, 1);
+
+  for (int k = 0; k < curve->control_count-3; k++) {
+    compute_bezier_points_open (curve, k, bez_points);
+    sample_bezier_curve (bez_points, theta, 
+      track->sample_x, track->sample_y, &ind, SAMPLE_MAX, 0);
+  }
+
+  compute_bezier_points_prolong_last (curve, bez_points);
+  sample_bezier_curve (bez_points, theta, 
+    track->sample_x, track->sample_y, &ind, SAMPLE_MAX, 0);
+
+  track->sample_count = ind;
+}
+
+
+8) Conseils d'implémentation
+
+* Implémenter dans cet ordre :
+    S'occuper d'abord du canon : affichage, rotation
+    Implémenter ensuite les tirs
+    Ensuite les trains de billes
+    Puis les collisions
+    Enfin, déterminer si le jeu est gagné ou perdu
+    Après, rajouter les états
+    Gérer les combos
+    Calculer le score.
+    etc
+
+* Module drawings :
+
+    on_area1_draw :  // aucun calcul ici
+        draw_train_tracks
+        draw_train_marbles
+        draw_canon
+        draw_shots
+
+    on_area1_button_press :
+        shoot_ammo    // insère dans shot_list
+        prepare_ammo  // recharge
+        refresh_area
+
+    on_area1_motion_notify :
+        update_canon_angle
+        refresh_area
+
+    on_timeout1 :
+        progress_game_next_step // tout se passe ici, cf module game
+        refresh_area
+
+* Module game :
+
+    progress_game_next_step :
+        move_shots_one_step
+        suppress_far_shots
+        process_shots_collisions
+        move_trains_one_step
+        check_end_of_game
+
+    move_trains_one_step :
+        pour chaque track :  // fv = first_visible
+            On fait avancer fv de la distance dist
+            On pousse tout ce qu'il y a devant fv
+            S'il y a de la place derrière fv on rend visible une nouvelle bille
+
+    process_shots_collisions :
+        pour chaque shot :
+            cherche la bille la plus proche sur tous les tracks
+            dist^2 = distance^2 entre cette bille et le shot
+            si dist^2 <= diamètre^2 :
+                calcule si on doit insérer avant ou après
+                insère la bille
+                calcule taille groupe de même couleur
+                si taille groupe >= 3 : supprime le groupe en tassant track_list
+
