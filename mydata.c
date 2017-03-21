@@ -20,9 +20,9 @@ Mydata *get_mydata (gpointer data){
 }
 
 void init_mydata(Mydata *my){
-	my->title = "TP en GTK+ 3.0";									//donne le nom de la fennetre
+	my->title = "Projet de deux abrutis GTK+ 3.0";									//donne le nom de la fennetre
 	my->win_width = 800;
-	my->win_height = 700;
+	my->win_height = 600;
 	my->Magicnumber = MYDATA_MAGIC;
 	my->Current_folder = NULL;
 	my->pixbuf1 = NULL;
