@@ -17,14 +17,5 @@ void generate_bezier_path(cairo_t *cr, Control bez_pts[4], double theta, int is_
 void draw_bezier_curves_fill(cairo_t *cr , Curve_infos *ci , double theta);
 void draw_bezier_curves_clip(cairo_t *cr , Curve_infos *ci , double theta, gpointer data);
 
-// gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data);
-// gboolean on_area_key_press (GtkWidget *area, GdkEvent *event, gpointer data);
-// gboolean on_area_key_release (GtkWidget *area, GdkEvent *event, gpointer data);
-// gboolean on_area_button_press (GtkWidget *area, GdkEvent *event, gpointer data);
-// gboolean on_area_button_release (GtkWidget *area, GdkEvent *event, gpointer data);
-// gboolean on_area_motion_notify (GtkWidget *area, GdkEvent *event, gpointer data);
-// gboolean on_area_enter_notify (GtkWidget *area, GdkEvent *event, gpointer data);
-// gboolean on_area_leave_notify (GtkWidget *area, GdkEvent *event, gpointer data);
-
 void area_init(gpointer data);
 #endif
