@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
-
+#include <stdlib.h>
+#include <time.h>
 
 #include "curve.h"
 #include "util.h"
@@ -35,6 +36,7 @@ int main (int argc, char *argv[]){
 	Mydata my;
 	init_mydata(&my);
 	
+	srand(time(NULL));
 
 	GtkApplication *app;
 	int status;

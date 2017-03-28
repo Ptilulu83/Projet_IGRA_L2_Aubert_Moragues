@@ -1,5 +1,6 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 
 #include "curve.h"
@@ -330,14 +331,13 @@ void draw_cannon(cairo_t * cr, gpointer data){
 
 	Game * game = &my->game;
 
-	game->cannon_sprite = cairo_image_surface_create_from_png("resource/Cannon.png");
-
 	int sprite_w = cairo_image_surface_get_width(game->cannon_sprite);
 	int sprite_h = cairo_image_surface_get_height(game->cannon_sprite);
 
 	double xA = centre_x - sprite_w/2, yA = centre_y - sprite_h/2;
 
-	cairo_identity_matrix (cr);
+	//cairo_identity_matrix (cr);
+	cairo_save(cr);
 	cairo_translate (cr, centre_x, centre_y);
 	cairo_rotate (cr, my->game.cannon_angle);
 	//cairo_scale (cr, 0.8, 0.8);
@@ -346,10 +346,77 @@ void draw_cannon(cairo_t * cr, gpointer data){
 	cairo_set_source_surface(cr, game->cannon_sprite, xA, yA);
 	cairo_rectangle(cr, xA, yA, sprite_w, sprite_h);
 	cairo_fill(cr);
+	cairo_restore(cr);
 
-	cairo_surface_destroy(game->cannon_sprite);
+	//cairo_surface_destroy(game->cannon_sprite);
 }
 
+void draw_munition(cairo_t * cr, gpointer data)
+{
+	Mydata * my = get_mydata(data);
+
+	int tmpw, tmph;
+
+	gtk_window_get_size(GTK_WINDOW(my->window), &tmpw, &tmph);
+
+	int centre_x=tmpw/2;
+	int centre_y=tmph/2;
+
+	Game * game = &my->game;
+
+	int sprite_w = cairo_image_surface_get_width(game->cannon_sprite);
+	int sprite_h = cairo_image_surface_get_height(game->cannon_sprite);
+
+	double xA = centre_x + sprite_w + 10, yA = centre_y - sprite_h/2 - 5;
+
+	//cairo_identity_matrix (cr);
+	cairo_save(cr);
+	cairo_translate (cr, centre_x, centre_y);
+	cairo_rotate (cr, my->game.cannon_angle);
+	cairo_scale (cr, 0.35, 0.35);
+	cairo_translate (cr, -centre_x, -centre_y);
+
+	cairo_set_source_surface(cr, game->sprite_ball_table[game->current_shot], xA, yA);
+	cairo_rectangle(cr, xA, yA, sprite_w, sprite_h);
+	cairo_fill(cr);
+
+	cairo_restore(cr);
+
+	//cairo_surface_destroy(game->sprite_ball_table[randomized_val]);
+}
+void draw_next_munition(cairo_t * cr, gpointer data)
+{
+	Mydata * my = get_mydata(data);
+
+	int tmpw, tmph;
+
+	gtk_window_get_size(GTK_WINDOW(my->window), &tmpw, &tmph);
+
+	int centre_x=tmpw/2;
+	int centre_y=tmph/2;
+
+	Game * game = &my->game;
+
+	int sprite_w = cairo_image_surface_get_width(game->cannon_sprite);
+	int sprite_h = cairo_image_surface_get_height(game->cannon_sprite);
+
+	double xA = centre_x - 14.5*(sprite_w/10), yA = centre_y - sprite_h - 150;
+
+	//cairo_identity_matrix (cr);
+	cairo_save(cr);
+	cairo_translate (cr, centre_x, centre_y);
+	cairo_rotate (cr, my->game.cannon_angle);
+	cairo_scale (cr, 0.15, 0.15);
+	cairo_translate (cr, -centre_x, -centre_y);
+
+	cairo_set_source_surface(cr, game->sprite_ball_table[game->next_shot], xA, yA);
+	cairo_rectangle(cr, xA, yA, sprite_w, sprite_h);
+	cairo_fill(cr);
+
+	cairo_restore(cr);
+
+	//cairo_surface_destroy(game->sprite_ball_table[randomized_val]);
+}
 gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
 	Mydata * my = get_mydata(data);
 
@@ -417,7 +484,10 @@ gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
 	//g_sprintf(msg,"on area draw: %dx%d",gtk_widget_get_allocated_width(my->area),gtk_widget_get_allocated_width(my->area));
 	//set_status(my->status,msg);
 
+	draw_munition(cr, my);
+	draw_next_munition(cr, my);
 	draw_cannon(cr, my);
+
 	return TRUE;
 }
 
