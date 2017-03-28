@@ -327,7 +327,8 @@ void draw_cannon(cairo_t * cr, gpointer data){
 	gtk_window_get_size(GTK_WINDOW(my->window), &tmpw, &tmph);
 
 	int centre_x=tmpw/2;
-	int centre_y=tmph/2;
+	int centre_y=(tmph-70)/2;
+	
 
 	Game * game = &my->game;
 
@@ -360,7 +361,7 @@ void draw_munition(cairo_t * cr, gpointer data)
 	gtk_window_get_size(GTK_WINDOW(my->window), &tmpw, &tmph);
 
 	int centre_x=tmpw/2;
-	int centre_y=tmph/2;
+	int centre_y=(tmph-70)/2;
 
 	Game * game = &my->game;
 
@@ -396,7 +397,7 @@ void draw_next_munition(cairo_t * cr, gpointer data)
 	gtk_window_get_size(GTK_WINDOW(my->window), &tmpw, &tmph);
 
 	int centre_x=tmpw/2;
-	int centre_y=tmph/2;
+	int centre_y=(tmph-70)/2;
 
 	Game * game = &my->game;
 
@@ -430,15 +431,28 @@ void draw_shots(cairo_t * cr, gpointer data)
 
 	Game * game = &my->game;
 
-	for (int i = 0; i < game->nb_shot_on_screen; ++i)
+	int tmpw, tmph;
+
+	gtk_window_get_size(GTK_WINDOW(my->window), &tmpw, &tmph);
+
+	int centre_x=tmpw/2;
+	int centre_y=(tmph-70)/2;
+
+	for (int i = 0; i < game->nb_shot_on_screen ; ++i)
 	{
 		Shot * shot = &game->shot_table[i];
 
 		int sprite_w = cairo_image_surface_get_width(game->sprite_ball_table[shot->shot_color]);
 		int sprite_h = cairo_image_surface_get_height(game->sprite_ball_table[shot->shot_color]);
+		
+
 
 		cairo_save(cr);
+		cairo_translate (cr, centre_x, centre_y);
+		//cairo_rotate (cr, my->game.cannon_angle);
 		cairo_scale (cr, 0.35, 0.35);
+		cairo_translate (cr, -centre_x, -centre_y);
+	
 		cairo_set_source_surface(cr, game->sprite_ball_table[shot->shot_color], shot->x, shot->y);
 		cairo_rectangle(cr, shot->x, shot->y, sprite_w, sprite_h);
 		cairo_fill(cr);
