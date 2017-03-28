@@ -26,6 +26,8 @@ void on_app_activate (GtkApplication * app, gpointer user_data){
 	layout_init(my);
 
 	win_scale_init(my);
+	
+	g_timeout_add(20, on_timeout_1, my);
 
 	gtk_widget_show_all (my->window);
 

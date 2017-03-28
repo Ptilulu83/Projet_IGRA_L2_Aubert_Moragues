@@ -369,6 +369,9 @@ void draw_munition(cairo_t * cr, gpointer data)
 
 	double xA = centre_x + sprite_w + 10, yA = centre_y - sprite_h/2 - 5;
 
+	sprite_w = cairo_image_surface_get_width(game->sprite_ball_table[game->current_shot]);
+	sprite_h = cairo_image_surface_get_height(game->sprite_ball_table[game->current_shot]);
+
 	//cairo_identity_matrix (cr);
 	cairo_save(cr);
 	cairo_translate (cr, centre_x, centre_y);
@@ -402,6 +405,9 @@ void draw_next_munition(cairo_t * cr, gpointer data)
 
 	double xA = centre_x - 14.5*(sprite_w/10), yA = centre_y - sprite_h - 150;
 
+	sprite_w = cairo_image_surface_get_width(game->sprite_ball_table[game->next_shot]);
+	sprite_h = cairo_image_surface_get_height(game->sprite_ball_table[game->next_shot]);
+
 	//cairo_identity_matrix (cr);
 	cairo_save(cr);
 	cairo_translate (cr, centre_x, centre_y);
@@ -417,6 +423,38 @@ void draw_next_munition(cairo_t * cr, gpointer data)
 
 	//cairo_surface_destroy(game->sprite_ball_table[randomized_val]);
 }
+
+void draw_shots(cairo_t * cr, gpointer data)
+{
+	Mydata * my = get_mydata(data);
+
+	Game * game = &my->game;
+
+	for (int i = 0; i < game->nb_shot_on_screen; ++i)
+	{
+		Shot * shot = &game->shot_table[i];
+
+		int sprite_w = cairo_image_surface_get_width(game->sprite_ball_table[shot->shot_color]);
+		int sprite_h = cairo_image_surface_get_height(game->sprite_ball_table[shot->shot_color]);
+
+		cairo_save(cr);
+		cairo_scale (cr, 0.35, 0.35);
+		cairo_set_source_surface(cr, game->sprite_ball_table[shot->shot_color], shot->x, shot->y);
+		cairo_rectangle(cr, shot->x, shot->y, sprite_w, sprite_h);
+		cairo_fill(cr);
+		cairo_restore(cr);
+	}
+}
+
+gboolean on_timeout_1(gpointer data)
+{
+	Mydata * my = get_mydata(data);
+
+	process_next_step(my);
+	refresh_area(my->area);
+	return TRUE;
+}
+
 gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
 	Mydata * my = get_mydata(data);
 
@@ -486,6 +524,7 @@ gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
 
 	draw_munition(cr, my);
 	draw_next_munition(cr, my);
+	draw_shots(cr, my);
 	draw_cannon(cr, my);
 
 	return TRUE;
@@ -561,6 +600,10 @@ gboolean on_area_key_press (GtkWidget *area, GdkEvent *event, gpointer data){
 		break;
 	case GDK_KEY_plus:
 		break;
+	case GDK_KEY_space:
+		switch_ammo(my);
+		refresh_area(area);
+		break;
 	}
 
 	return TRUE;
@@ -574,6 +617,8 @@ gboolean on_area_key_release (GtkWidget *area, GdkEvent *event, gpointer data){
 
 gboolean on_area_button_press (GtkWidget *area, GdkEvent *event, gpointer data){
 	Mydata *my = get_mydata(data);
+
+	Game * game = &my->game;
 
 	GdkEventButton *evb = &event->button;
 
@@ -648,6 +693,18 @@ gboolean on_area_button_press (GtkWidget *area, GdkEvent *event, gpointer data){
 				break;
 			default:
 				break;	
+		}
+	}
+
+	if(my->click_n == 1 && game->game_state)
+	{
+		switch(game->game_state)
+		{
+			case GS_PLAYING:
+				fire(my);
+				break;
+			default:
+				break;
 		}
 	}
 	printf ("%s: %d %.1f %.1f\n", __func__, evb->button, evb->x, evb->y);

@@ -21,6 +21,12 @@ void game_init(Game * game)
 
 	game->current_shot=rand()%NB_TYPE_BILLES;
 	game->next_shot=rand()%NB_TYPE_BILLES;
+
+	game->game_state = GS_PLAYING;
+
+	game->nb_shot_on_screen = 0;
+
+	game->shot_speed = 10.0;
 }
 
 void udapte_cannon_angle(gpointer data){
@@ -47,6 +53,58 @@ void fire(gpointer data)
 {
 	Mydata * my = get_mydata(data);
 
-	game->current_shot=rand()%NB_TYPE_BILLES;
-	game->next_shot=rand()%NB_TYPE_BILLES;
+	Game * game = &my->game;
+
+	if (game->nb_shot_on_screen <= SHOT_LIMIT)
+	{
+		int tmpw, tmph;
+
+		gtk_window_get_size(GTK_WINDOW(my->window), &tmpw, &tmph);
+
+		int centre_x=tmpw/2;
+		int centre_y=tmph/2;
+
+		int sprite_w = cairo_image_surface_get_width(game->cannon_sprite);
+		int sprite_h = cairo_image_surface_get_height(game->cannon_sprite);
+
+		double xA = centre_x + cos(game->cannon_angle)*(sprite_w + 10), yA = centre_y - sin(game->cannon_angle)*(sprite_h/2 - 5);
+
+		game->shot_table[game->nb_shot_on_screen].dirx = cos(game->cannon_angle);
+		game->shot_table[game->nb_shot_on_screen].diry = sin(game->cannon_angle);
+
+		game->shot_table[game->nb_shot_on_screen].shot_color = game->current_shot;
+		game->nb_shot_on_screen++;
+
+		game->shot_table[game->nb_shot_on_screen].x = xA;
+		game->shot_table[game->nb_shot_on_screen].y = yA;
+
+		game->current_shot=game->next_shot;
+		game->next_shot=rand()%NB_TYPE_BILLES;
+	}
+}
+
+void switch_ammo(gpointer data)
+{
+	Mydata * my = get_mydata(data);
+
+	Game * game = &my->game;
+
+	int tmp = game->current_shot;
+	game->current_shot = game->next_shot;
+	game->next_shot = tmp;
+}
+
+void process_next_step(gpointer data)
+{
+	Mydata * my = get_mydata(data);
+
+	Game * game = &my->game;
+
+	for (int i = 0; i < game->nb_shot_on_screen; ++i)
+	{
+		Shot * shot = &game->shot_table[i];
+
+		shot->x += shot->dirx*game->shot_speed;
+		shot->y += shot->diry*game->shot_speed;
+	}
 }
