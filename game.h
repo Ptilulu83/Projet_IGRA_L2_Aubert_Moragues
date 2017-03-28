@@ -4,7 +4,10 @@
 typedef struct
 {
 	cairo_surface_t * cannon_sprite;
+	cairo_surface_t * sprite_ball_table;
+
 	double cannon_angle;
+	
 }Game;
 
 void game_init();

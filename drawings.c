@@ -321,8 +321,12 @@ void draw_bezier_curves_clip(cairo_t *cr , Curve_infos *ci , double theta, gpoin
 void draw_cannon(cairo_t * cr, gpointer data){
 	Mydata * my = get_mydata(data);
 
-	int centre_x=my->win_width/2;
-	int centre_y=my->win_height/2;
+	int tmpw, tmph;
+
+	gtk_window_get_size(GTK_WINDOW(my->window), &tmpw, &tmph);
+
+	int centre_x=tmpw/2;
+	int centre_y=tmph/2;
 
 	Game * game = &my->game;
 
