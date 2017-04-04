@@ -36,9 +36,8 @@ void on_app_activate (GtkApplication * app, gpointer user_data){
 
 int main (int argc, char *argv[]){
 	Mydata my;
-	init_mydata(&my);
-	
 	srand(time(NULL));
+	init_mydata(&my);
 
 	GtkApplication *app;
 	int status;

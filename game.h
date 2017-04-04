@@ -37,6 +37,7 @@ typedef struct
 	Game_State game_state;
 
 	double cannon_angle;
+	double correction_angle;
 	double shot_speed;
 
 }Game;
