@@ -226,3 +226,149 @@ int reset_shift(Curve_infos *ci, double dx, double dy){
 	}
 }
 
+/* Échantillonnage et stockage des courbes */
+
+void store_sample (double x, double y,
+  double sx[], double sy[], int *ind, int ind_max)
+{
+  if (*ind >= ind_max) {
+    fprintf (stderr, "%s: capacity exceeded \n", __func__);
+    return;
+  }
+  sx[*ind] = x;
+  sy[*ind] = y;
+  *ind += 1;
+}
+
+/* Calcule les coordonnées (x,y) du point de coordonnées t à partir
+ * de l'échantillonnage sx[],sy[]. t est un réel dans [0..tmax-1].
+ * Renvoie TRUE si t est bien dans l'intervalle ;
+ * sinon renvoie FALSE et met dans (x,y) le premier ou dernier point.
+ * RQ actuellement on ne se sert pas du retour.
+*/
+int interpolate_samples (double sx[], double sy[], double t, int tmax,
+  double *x, double *y)
+{
+  if (t <= 0) {
+    *x = sx[0];
+    *y = sy[0];
+    return t == 0;
+  } 
+  if (t >= tmax-1) {
+    *x = sx[tmax-1];
+    *y = sy[tmax-1];
+    return t == tmax-1;
+  } 
+  int i = t;
+  double u = t-i;
+  *x = sx[i]*(1-u) + sx[i+1]*u;
+  *y = sy[i]*(1-u) + sy[i+1]*u;
+  return 1;
+}
+
+/* Échantillonne une courbe de Bézier avec le pas théta.
+ * Stocke les points dans sx[0..ind_max-1], sy[0..ind_max-1] à partir de ind. 
+ * Au retour, ind est le nouveau point d'insertion.
+ * Fct inspirée de drawings.c:generate_bezier_path() du TP6 (supprimée ici)
+*/
+void sample_bezier_curve (Control bez_points[4], double theta,
+  double sx[], double sy[], int *ind, int ind_max, int is_first)
+{
+  double x, y, bx[4], by[4], t;
+
+  for (int j = 0; j <= 3 ; j++) {
+      bx[j] = bez_points[j].x;
+      by[j] = bez_points[j].y;
+  }
+
+  for (t = is_first ? 0.0 : theta; t < 1.0; t += theta) {
+    x = compute_bezier_cubic (bx, t);
+    y = compute_bezier_cubic (by, t);
+    store_sample (x, y, sx, sy, ind, ind_max);
+  }
+
+  if (t < 1.0) {
+    x = compute_bezier_cubic (bx, 1.0);
+    y = compute_bezier_cubic (by, 1.0);
+    store_sample (x, y, sx, sy, ind, ind_max);
+  }
+}
+
+/* Étant donné le point A de paramètre tA,
+ * Calcule les coordonnées du point B(xB,yB) de paramètre tB,
+ * situé à la distance |dist| de A, après ou avant.
+ * Les tableaux sx[],sy[] ont leur indice dans [0..tmax-1].
+ * Renvoie tB, ou -1 si tB est hors tableau.
+*/
+
+double compute_distant_point_forward (double sx[], double sy[], double tA, int tmax,
+  double dist, double *xB, double *yB)
+{
+  double xA, yA;
+  interpolate_samples (sx, sy, tA, tmax, &xA, &yA);
+
+  if (dist == 0) {
+    *xB = xA; *yB = yA;
+    return (tA >= 0 && tA <= tmax-1) ? tA : -1;
+  }
+
+  double t, m0, m1, dx, dy, d2 = 0, dist2 = dist*dist, epsilon = 0.1;
+
+  // Recherche un point qui dépasse |dist|.
+  // On fait une itération de plus (t <= tmax-1 +1) pour atteindre tmax-1
+  // en effet si t > tmax-1 alors interpolate_samples prend t = tmax-1
+  for (t = tA+1.0; t <= tmax-1 +1; t += 1.0) { 
+    interpolate_samples (sx, sy, t, tmax, xB, yB);
+    dx = *xB - xA; dy = *yB - yA; d2 = dx*dx + dy*dy;
+    if (d2 > dist2) break;
+  }
+  if (d2 < dist2) return -1;
+  m0 = t-1.0; m1 = t;
+
+  // Recherche dichotomique jusqu'à la précision epsilon
+  while (m1-m0 > 0) {
+    t = (m0+m1)/2.0;
+    interpolate_samples (sx, sy, t, tmax, xB, yB);
+    dx = *xB - xA; dy = *yB - yA; d2 = dx*dx + dy*dy;
+    if (d2 < dist2-epsilon) m0 = t;
+    else if (d2 > dist2+epsilon) m1 = t; 
+    else break; // Précision suffisante
+  }
+  return t;
+}
+
+double compute_distant_point_backward (double sx[], double sy[], double tA, int tmax,
+  double dist, double *xB, double *yB)
+{
+  double xA, yA;
+  interpolate_samples (sx, sy, tA, tmax, &xA, &yA);
+
+  if (dist == 0) {
+    *xB = xA; *yB = yA;
+    return (tA >= 0 && tA <= tmax-1) ? tA : -1;
+  }
+
+  double t, m0, m1, dx, dy, d2 = 0, dist2 = dist*dist, epsilon = 0.1;
+
+  // Recherche un point qui dépasse |dist|.
+  // On fait une itération de plus (t >= 0 -1) pour atteindre 0
+  // en effet si t < 0 alors interpolate_samples prend t = 0
+  for (t = tA-1.0; t >= 0 -1; t -= 1.0) {
+    interpolate_samples (sx, sy, t, tmax, xB, yB);
+    dx = *xB - xA; dy = *yB - yA; d2 = dx*dx + dy*dy;
+    if (d2 > dist2) break;
+  }
+  if (d2 < dist2) return -1;
+  m0 = t; m1 = t+1.0;
+
+  // Recherche dichotomique jusqu'à la précision epsilon
+  while (m1-m0 > 0) {
+    t = (m0+m1)/2.0;
+    interpolate_samples (sx, sy, t, tmax, xB, yB);
+    dx = *xB - xA; dy = *yB - yA; d2 = dx*dx + dy*dy;
+    if (d2 < dist2-epsilon) m1 = t;
+    else if (d2 > dist2+epsilon) m0 = t; 
+    else break; // Précision suffisante
+  }
+  return t;
+}

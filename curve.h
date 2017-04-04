@@ -42,5 +42,10 @@ void compute_bezier_points_prolong(Curve * curve, int i, Control bez_points[4]);
 double compute_bezier_cubic (double d[4],double t);
 int move_shift(Curve_infos *ci, double dx, double dy);
 int reset_shift(Curve_infos *ci, double dx, double dy);
+void store_sample (double x, double y,double sx[], double sy[], int *ind, int ind_max);
+int interpolate_samples (double sx[], double sy[], double t, int tmax,double *x, double *y);
+void sample_bezier_curve (Control bez_points[4], double theta,  double sx[], double sy[], int *ind, int ind_max, int is_first);
+double compute_distant_point_forward (double sx[], double sy[], double tA, int tmax,double dist, double *xB, double *yB);
+double compute_distant_point_backward (double sx[], double sy[], double tA, int tmax,double dist, double *xB, double *yB);
 
 #endif

@@ -8,6 +8,62 @@
 #include "drawings.h"
 #include "menu.h"
 #include "gui.h"
+#include "game.h"
+
+void on_save_clicked (GtkWidget *widget, gpointer data){
+	Mydata *my = get_mydata(data);
+
+	my->scale_value=1.0;			//
+	g_object_unref(my->scale);		//
+	win_scale_init(my);				//
+
+	printf ("load file \n");
+	GtkWidget *dialog;
+	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
+	gint res;
+
+	dialog = gtk_file_chooser_dialog_new (	"select image",(GtkWindow *) my->window,action,
+											"Cancel",GTK_RESPONSE_CANCEL,
+											"Open", GTK_RESPONSE_ACCEPT,
+											NULL);
+
+	if (my->Current_folder != NULL){
+		gtk_file_chooser_set_current_folder((GtkFileChooser *) dialog , my->Current_folder);
+	}
+	res = gtk_dialog_run (GTK_DIALOG (dialog));
+	if (res == GTK_RESPONSE_ACCEPT){
+	    char *filename;
+	    GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
+	    filename = gtk_file_chooser_get_filename (chooser);
+	    set_status(my->status, "Loading Image...");
+	    g_clear_object(&my->pixbuf1);
+		my->pixbuf1=gdk_pixbuf_new_from_file(filename,NULL);
+
+		//gtk_range_set_value(GTK_RANGE(my->win_scale),my->scale_value);
+
+		if(my->pixbuf1 == NULL)
+		{
+			set_status(my->status, "Loading Failed : not an image");
+			// gtk_image_set_from_icon_name(GTK_IMAGE(my->image),"image-missing", GTK_ICON_SIZE_DIALOG);
+		}
+		else
+		{
+			char msg[200];			
+			g_sprintf(msg, "Loading successful : %dx%d", gdk_pixbuf_get_width(my->pixbuf1), gdk_pixbuf_get_height(my->pixbuf1));
+			set_status(my->status, msg);
+			// gtk_image_set_from_pixbuf (GTK_IMAGE(my->image), my->pixbuf1);
+			//gtk_image_set_from_file (GTK_IMAGE(my->image),filename);
+		}
+		g_free (my->Current_folder);
+		my->Current_folder=gtk_file_chooser_get_current_folder(chooser);
+		g_free (filename);
+
+		my->scale_value = 1.0f;
+		my->rotate_angle = 0.0f;
+		update_area_with_transforms(my);
+		}
+	gtk_widget_destroy (dialog);
+}
 
 void on_load_clicked (GtkWidget *widget, gpointer data){
 	Mydata *my = get_mydata(data);
@@ -147,10 +203,12 @@ void on_editing_activate (GtkCheckMenuItem *widget, gpointer data){
 	if (my->show_edit == TRUE){
 		set_status(my->status, "Editing is on");
 		gtk_widget_show(my->frame);
+		my->game.game_state=GS_EDIT;
 	}
 	else {
 		set_status(my->status, "Editing is off");
 		gtk_widget_hide(my->frame);
+		my->game.game_state=GS_PLAYING;
 	}
 }
 
@@ -171,7 +229,7 @@ void on_about_clicked (GtkWidget * widget, gpointer data){
 void menus_init(gpointer data){
 	Mydata * my = get_mydata(data);
 	GtkWidget *item_file, *item_tools , *item_help ;
-	GtkWidget *sub_file, *load, *quit;
+	GtkWidget *sub_file, *save, *load, *quit;
 	GtkWidget *sub_tools, *BG_color, *rotate_right, *rotate_left, *scale, * clip , *editing;
 	GtkWidget *sub_help, *about;
 
@@ -182,6 +240,10 @@ void menus_init(gpointer data){
 
 			sub_file =gtk_menu_new();
 			gtk_menu_item_set_submenu(GTK_MENU_ITEM(item_file),sub_file);
+
+				save = gtk_menu_item_new_with_label("Save");
+				gtk_menu_shell_append(GTK_MENU_SHELL (sub_file),save);
+				g_signal_connect (save, "activate", G_CALLBACK(on_save_clicked), my);
 
 				load = gtk_menu_item_new_with_label("Load");
 				gtk_menu_shell_append(GTK_MENU_SHELL (sub_file),load);

@@ -161,22 +161,23 @@ void draw_bezier_polygons_prolong(cairo_t * cr, Curve_infos * ci){
 
 	for (int i = 0; i < ci->curve_list.curve_count; ++i){
 		Curve * curve = &ci->curve_list.curves[i];
-
-		for (int j = 0; j < curve->control_count+1; ++j){
-			if (curve->control_count>2){
+		if (curve->control_count>2){
+			for (int j = 0; j < curve->control_count+1; ++j){
+				
 				if (j<2 || j>curve->control_count-2){
 					compute_bezier_points_prolong(curve,j,bez_pts);
 				}
 				else if (j>1 && j<curve->control_count-1){
 					compute_bezier_points_open(curve,j-2,bez_pts);
 				}
+				
+				cairo_set_source_rgb(cr,0/255., 255/255., 0/255.);
+				cairo_move_to(cr, bez_pts[0].x, bez_pts[0].y);
+				cairo_line_to(cr, bez_pts[1].x, bez_pts[1].y);
+				cairo_move_to(cr, bez_pts[2].x, bez_pts[2].y);
+				cairo_line_to(cr, bez_pts[3].x, bez_pts[3].y);
+				cairo_stroke(cr);
 			}
-			cairo_set_source_rgb(cr,0/255., 255/255., 0/255.);
-			cairo_move_to(cr, bez_pts[0].x, bez_pts[0].y);
-			cairo_line_to(cr, bez_pts[1].x, bez_pts[1].y);
-			cairo_move_to(cr, bez_pts[2].x, bez_pts[2].y);
-			cairo_line_to(cr, bez_pts[3].x, bez_pts[3].y);
-			cairo_stroke(cr);
 		}
 	}
 }
@@ -261,6 +262,28 @@ void draw_bezier_curves_prolong(cairo_t *cr , Curve_infos *ci , double theta){
 				cairo_stroke(cr);
 			}
 			*/
+		}
+	}
+}
+
+void draw_bezier_curves_prolong_game(cairo_t *cr , Curve_infos *ci , double theta){
+	Control bez_pts[4];
+	for (int i = 0; i < ci->curve_list.curve_count; ++i){
+		Curve * curve = &ci->curve_list.curves[i];
+		for (int j = 0; j < curve->control_count+1; ++j){
+			if (curve->control_count>2){
+				if (j<2 || j>curve->control_count-2){
+					compute_bezier_points_prolong(curve,j,bez_pts);
+				}
+				else if (j>1 && j<curve->control_count-1){
+					compute_bezier_points_open(curve,j-2,bez_pts);
+				}
+				for (int k = 10; k > 0; --k){
+					cairo_set_source_rgb(cr,10*(10-k)/255., 10*(10-k)/255., 10*(10-k)/255.);
+					cairo_set_line_width (cr, k);
+					draw_bezier_curve(cr,bez_pts,theta);
+				}
+			}
 		}
 	}
 }
@@ -455,7 +478,7 @@ gboolean on_timeout_1(gpointer data)
 gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
 	Mydata * my = get_mydata(data);
 
-	PangoLayout * layout = pango_cairo_create_layout(cr);
+	
 	if (my->pixbuf2 != NULL){
 		double width=gdk_pixbuf_get_width(my->pixbuf2);
 		double height=gdk_pixbuf_get_height(my->pixbuf2);
@@ -466,9 +489,12 @@ gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
 			cairo_fill(cr);
 		}
 	}
-	draw_control_labels(cr, layout, &my->curve_infos);
-	pango_cairo_show_layout(cr, layout);
-	g_object_unref(layout);
+	if(my->show_edit == TRUE){
+		PangoLayout * layout = pango_cairo_create_layout(cr);
+		draw_control_labels(cr, layout, &my->curve_infos);
+		pango_cairo_show_layout(cr, layout);
+		g_object_unref(layout);
+	}
 
 	if (my->click_n == 1 && my->clip_image== TRUE){
 		cairo_set_line_width (cr, 2);
@@ -483,8 +509,8 @@ gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
 		}
 	}
 
-	
-	switch(my->bsp_mode){
+	if(my->show_edit == TRUE){
+		switch(my->bsp_mode){
 			case BSP_OPEN:
 				draw_control_polygons_open (cr,&my->curve_infos);
 				draw_bezier_polygons_open(cr, &my->curve_infos);
@@ -514,6 +540,10 @@ gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
 				printf("%d\n",my->edit_mode);
 				break;
 		}
+	}
+	else{
+		draw_bezier_curves_prolong_game(cr,&my->curve_infos,0.1);
+	}
 
 	//char msg[200];
 	//g_sprintf(msg,"on area draw: %dx%d",gtk_widget_get_allocated_width(my->area),gtk_widget_get_allocated_width(my->area));
@@ -698,7 +728,9 @@ gboolean on_area_button_press (GtkWidget *area, GdkEvent *event, gpointer data){
 		switch(game->game_state)
 		{
 			case GS_PLAYING:
-				fire(my);
+				if (evb->type == GDK_BUTTON_PRESS){
+					fire(my);
+				}
 				break;
 			default:
 				break;

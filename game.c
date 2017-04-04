@@ -29,7 +29,29 @@ void game_init(Game * game)
 
 	game->correction_angle=(3.1415926/180.)*4;
 
-	game->shot_speed = 1.0;
+	game->shot_speed = 15.0;
+}
+
+void sample_curve_to_track (Curve *curve, Track *track, double theta)
+{
+	Control bez_points[4];
+	int ind = 0;
+	if (curve->control_count < 2) return;
+	for (int k = 0; k < curve->control_count+1; k++) {
+		if (k<2 || k>curve->control_count-2){
+			compute_bezier_points_prolong(curve,k,bez_points);
+		}
+		else if (k>1 && k<curve->control_count-1){
+			compute_bezier_points_open(curve,k-2,bez_points);
+		}
+		if(k==1){
+			sample_bezier_curve (bez_points, theta, track->sample_x, track->sample_y, &ind, SAMPLE_MAX, 1);
+		}
+		else{
+			sample_bezier_curve (bez_points, theta, track->sample_x, track->sample_y, &ind, SAMPLE_MAX, 0);
+		}		
+	}
+	track->sample_count = ind;
 }
 
 void udapte_cannon_angle(gpointer data){
