@@ -38,8 +38,6 @@ int main (int argc, char *argv[]){
 	Mydata my;
 	srand(time(NULL));
 	init_mydata(&my);
-	
-	
 
 	GtkApplication *app;
 	int status;

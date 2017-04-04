@@ -363,7 +363,9 @@ void draw_munition(cairo_t * cr, gpointer data)
 	int sprite_w = cairo_image_surface_get_width(game->cannon_sprite);
 	int sprite_h = cairo_image_surface_get_height(game->cannon_sprite);
 
+
 	double xA = centre_x + sprite_w/2 + 130, yA = centre_y - sprite_h/2 -10;
+
 
 	sprite_w = cairo_image_surface_get_width(game->sprite_ball_table[game->current_shot]);
 	sprite_h = cairo_image_surface_get_height(game->sprite_ball_table[game->current_shot]);

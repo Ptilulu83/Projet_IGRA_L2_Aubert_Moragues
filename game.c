@@ -25,9 +25,11 @@ void game_init(Game * game)
 	game->game_state = GS_PLAYING;
 
 	game->nb_shot_on_screen = 0;
+
 	game->correction_angle=(3.1415926/180.)*4;
 
 	game->shot_speed = 1.0;
+
 }
 
 void udapte_cannon_angle(gpointer data){
@@ -64,6 +66,7 @@ void fire(gpointer data)
 		Game * game = &my->game;
 
 		int sprite_w = cairo_image_surface_get_width(game->cannon_sprite);
+
 		int spriteb_w = cairo_image_surface_get_width(game->sprite_ball_table[0]);
 		int spriteb_h = cairo_image_surface_get_height(game->sprite_ball_table[0]);
 
