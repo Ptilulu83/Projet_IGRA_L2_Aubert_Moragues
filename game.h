@@ -42,9 +42,10 @@ typedef struct
 }Game;
 
 void game_init(Game *);
-void udapte_cannon_angle();
+void udapte_cannon_angle(gpointer);
 void fire(gpointer);
 void switch_ammo(gpointer);
+int remove_shot(Game *);
 void process_next_step(gpointer data);
 
 #endif

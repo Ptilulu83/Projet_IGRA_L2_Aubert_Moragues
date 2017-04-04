@@ -26,7 +26,7 @@ void game_init(Game * game)
 
 	game->nb_shot_on_screen = 0;
 
-	game->shot_speed = 0.0;
+	game->shot_speed = 10.0;
 }
 
 void udapte_cannon_angle(gpointer data){
@@ -98,6 +98,16 @@ void switch_ammo(gpointer data)
 	int tmp = game->current_shot;
 	game->current_shot = game->next_shot;
 	game->next_shot = tmp;
+}
+
+int remove_shot(Game * game, int n)
+{
+	if (game->nb_shot_on_screen <= 0)
+	{
+		return -1;
+	}
+
+	memmove (game->shot_table+n,game->shot_table+n+1, sizeof(Shot)*(game->nb_shot_on_screen-1-n));
 }
 
 void process_next_step(gpointer data)
