@@ -26,7 +26,7 @@ void game_init(Game * game)
 
 	game->nb_shot_on_screen = 0;
 
-	game->shot_speed = 5.0;
+	game->shot_speed = 0.0;
 }
 
 void udapte_cannon_angle(gpointer data){
@@ -55,26 +55,26 @@ void fire(gpointer data)
 
 	Game * game = &my->game;
 
-	if (game->nb_shot_on_screen <= SHOT_LIMIT)
+	if (game->nb_shot_on_screen < SHOT_LIMIT)
 	{
-		int tmpw, tmph;
+		int centre_x=my->area_w/2;
+		int centre_y=my->area_h/2;
 
-		gtk_window_get_size(GTK_WINDOW(my->window), &tmpw, &tmph);
-
-		int centre_x=tmpw/2;
-		int centre_y=(tmph-70)/2;
-		
+		Game * game = &my->game;
 
 		int sprite_w = cairo_image_surface_get_width(game->cannon_sprite);
 		int sprite_h = cairo_image_surface_get_height(game->cannon_sprite);
 
-		double xA = centre_x + cos(game->cannon_angle)*(sprite_w + 10)+ sin(game->cannon_angle)*(sprite_h/2 - 5) , yA = centre_y + sin(game->cannon_angle)*(sprite_w + 10)- cos(game->cannon_angle)*(sprite_h/2 - 5);
-		//+ cos(game->cannon_angle)*(sprite_w + 10),- sin(game->cannon_angle)*(sprite_h/2 - 5)
+		int spriteb_w = cairo_image_surface_get_width(game->sprite_ball_table[0]);
+		int spriteb_h = cairo_image_surface_get_height(game->sprite_ball_table[0]);
+
+		double xA = ((centre_x + (sprite_w + 10) * cos(game->cannon_angle)) - spriteb_w/2 + (60 * cos(game->cannon_angle)));
+		double yA = ((centre_y + (sprite_w + 10) * sin(game->cannon_angle)) - spriteb_h/2 + (60 * sin(game->cannon_angle)));
+
 		game->shot_table[game->nb_shot_on_screen].dirx = cos(game->cannon_angle);
 		game->shot_table[game->nb_shot_on_screen].diry = sin(game->cannon_angle);
 
 		game->shot_table[game->nb_shot_on_screen].shot_color = game->current_shot;
-		
 
 		game->shot_table[game->nb_shot_on_screen].x = xA;
 		game->shot_table[game->nb_shot_on_screen].y = yA;
@@ -82,6 +82,10 @@ void fire(gpointer data)
 		game->nb_shot_on_screen++;
 		game->current_shot=game->next_shot;
 		game->next_shot=rand()%NB_TYPE_BILLES;
+	}
+	else
+	{
+		return;
 	}
 }
 

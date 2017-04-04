@@ -328,7 +328,6 @@ void draw_cannon(cairo_t * cr, gpointer data){
 
 	int centre_x=tmpw/2;
 	int centre_y=(tmph-70)/2;
-	
 
 	Game * game = &my->game;
 
@@ -356,12 +355,8 @@ void draw_munition(cairo_t * cr, gpointer data)
 {
 	Mydata * my = get_mydata(data);
 
-	int tmpw, tmph;
-
-	gtk_window_get_size(GTK_WINDOW(my->window), &tmpw, &tmph);
-
-	int centre_x=tmpw/2;
-	int centre_y=(tmph-70)/2;
+	int centre_x=my->area_w/2;
+	int centre_y=my->area_h/2;
 
 	Game * game = &my->game;
 
@@ -392,12 +387,8 @@ void draw_next_munition(cairo_t * cr, gpointer data)
 {
 	Mydata * my = get_mydata(data);
 
-	int tmpw, tmph;
-
-	gtk_window_get_size(GTK_WINDOW(my->window), &tmpw, &tmph);
-
-	int centre_x=tmpw/2;
-	int centre_y=(tmph-70)/2;
+	int centre_x=my->area_w/2;
+	int centre_y=my->area_h/2;
 
 	Game * game = &my->game;
 
@@ -429,14 +420,10 @@ void draw_shots(cairo_t * cr, gpointer data)
 {
 	Mydata * my = get_mydata(data);
 
+	int centre_x=my->area_w/2;
+	int centre_y=my->area_h/2;
+
 	Game * game = &my->game;
-
-	int tmpw, tmph;
-
-	gtk_window_get_size(GTK_WINDOW(my->window), &tmpw, &tmph);
-
-	int centre_x=tmpw/2;
-	int centre_y=(tmph-70)/2;
 
 	for (int i = 0; i < game->nb_shot_on_screen ; ++i)
 	{
@@ -444,8 +431,6 @@ void draw_shots(cairo_t * cr, gpointer data)
 
 		int sprite_w = cairo_image_surface_get_width(game->sprite_ball_table[shot->shot_color]);
 		int sprite_h = cairo_image_surface_get_height(game->sprite_ball_table[shot->shot_color]);
-		
-
 
 		cairo_save(cr);
 		cairo_translate (cr, centre_x, centre_y);
@@ -536,9 +521,9 @@ gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
 	//g_sprintf(msg,"on area draw: %dx%d",gtk_widget_get_allocated_width(my->area),gtk_widget_get_allocated_width(my->area));
 	//set_status(my->status,msg);
 
+	draw_shots(cr, my);
 	draw_munition(cr, my);
 	draw_next_munition(cr, my);
-	draw_shots(cr, my);
 	draw_cannon(cr, my);
 
 	return TRUE;
@@ -807,6 +792,16 @@ gboolean on_area_leave_notify (GtkWidget *area, GdkEvent *event, gpointer data){
 	return TRUE;
 }
 
+gboolean on_area_size_allocate(GtkWidget * area, GdkRectangle * rect, gpointer data)
+{
+	Mydata * my = get_mydata(data);
+
+	my->area_w = rect->width;
+	my->area_h = rect->height;
+
+	return TRUE;
+}
+
 void area_init(gpointer data){
 	Mydata * my = get_mydata(data);
 
@@ -822,6 +817,7 @@ void area_init(gpointer data){
 	g_signal_connect (my->area, "motion-notify-event", G_CALLBACK(on_area_motion_notify), my);
 	g_signal_connect (my->area, "enter-notify-event", G_CALLBACK(on_area_enter_notify), my);
 	g_signal_connect (my->area, "leave-notify-event", G_CALLBACK(on_area_leave_notify), my);
+	g_signal_connect (my->area, "size-allocate", G_CALLBACK(on_area_size_allocate), my);
 
 	gtk_widget_add_events (my->area,
 	GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK |

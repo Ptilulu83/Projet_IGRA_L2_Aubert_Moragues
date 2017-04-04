@@ -58,6 +58,9 @@ typedef struct {
 	GdkPixbuf *pixbuf1;
 	GdkPixbuf *pixbuf2;
 
+	double area_w;
+	double area_h;
+
 	gdouble scale_value;
 	gdouble rotate_angle;
 	gdouble click_x;
