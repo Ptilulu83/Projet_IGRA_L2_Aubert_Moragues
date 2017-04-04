@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 #include "curve.h"
@@ -28,8 +29,7 @@ void game_init(Game * game)
 
 	game->correction_angle=(3.1415926/180.)*4;
 
-	game->shot_speed = 1.0;
-
+	game->shot_speed = 15.0;
 }
 
 void udapte_cannon_angle(gpointer data){
@@ -110,6 +110,9 @@ int remove_shot(Game * game, int n)
 	}
 
 	memmove (game->shot_table+n,game->shot_table+n+1, sizeof(Shot)*(game->nb_shot_on_screen-1-n));
+	game->nb_shot_on_screen--;
+
+	return 0;
 }
 
 void process_next_step(gpointer data)
@@ -118,11 +121,20 @@ void process_next_step(gpointer data)
 
 	Game * game = &my->game;
 
+	int spriteb_w = cairo_image_surface_get_width(game->sprite_ball_table[0]);
+	int spriteb_h = cairo_image_surface_get_height(game->sprite_ball_table[0]);
+
 	for (int i = 0; i < game->nb_shot_on_screen; ++i)
 	{
 		Shot * shot = &game->shot_table[i];
 
 		shot->x += shot->dirx*game->shot_speed;
 		shot->y += shot->diry*game->shot_speed;
+
+		if (((shot->x < -my->area_w - spriteb_w) || (shot->x > my->area_w*2)) || ((shot->y < -my->area_h-spriteb_h) || (shot->y > my->area_h*2)))
+		{
+			printf("Désinstanciation du tir %d\n", i);
+			int res = remove_shot(game, i);
+		}
 	}
 }

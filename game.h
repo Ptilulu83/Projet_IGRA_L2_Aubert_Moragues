@@ -1,7 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 #define NB_TYPE_BILLES 9
-#define SHOT_LIMIT 100
+#define SHOT_LIMIT 10
 
 typedef enum
 {
@@ -46,7 +46,7 @@ void game_init(Game *);
 void udapte_cannon_angle(gpointer);
 void fire(gpointer);
 void switch_ammo(gpointer);
-int remove_shot(Game *);
+int remove_shot(Game *, int);
 void process_next_step(gpointer data);
 
 #endif
