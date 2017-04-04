@@ -29,7 +29,7 @@ void game_init(Game * game)
 
 	game->correction_angle=(3.1415926/180.)*4;
 
-	game->shot_speed = 15.0;
+	game->shot_speed = 1.0;
 }
 
 void udapte_cannon_angle(gpointer data){

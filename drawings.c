@@ -456,7 +456,6 @@ gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
 	Mydata * my = get_mydata(data);
 
 	PangoLayout * layout = pango_cairo_create_layout(cr);
-	draw_control_labels(cr, layout, &my->curve_infos);
 	if (my->pixbuf2 != NULL){
 		double width=gdk_pixbuf_get_width(my->pixbuf2);
 		double height=gdk_pixbuf_get_height(my->pixbuf2);
@@ -467,6 +466,7 @@ gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
 			cairo_fill(cr);
 		}
 	}
+	draw_control_labels(cr, layout, &my->curve_infos);
 	pango_cairo_show_layout(cr, layout);
 	g_object_unref(layout);
 

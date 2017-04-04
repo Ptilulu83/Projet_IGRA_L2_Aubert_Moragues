@@ -1,7 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 #define NB_TYPE_BILLES 9
-#define SHOT_LIMIT 10
+#define SHOT_LIMIT 1000
 
 typedef enum
 {
