@@ -1,5 +1,6 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 
 #include "curve.h"
@@ -321,19 +322,22 @@ void draw_bezier_curves_clip(cairo_t *cr , Curve_infos *ci , double theta, gpoin
 void draw_cannon(cairo_t * cr, gpointer data){
 	Mydata * my = get_mydata(data);
 
-	int centre_x=my->win_width/2;
-	int centre_y=my->win_height/2;
+	int tmpw, tmph;
+
+	gtk_window_get_size(GTK_WINDOW(my->window), &tmpw, &tmph);
+
+	int centre_x=tmpw/2;
+	int centre_y=(tmph-70)/2;
 
 	Game * game = &my->game;
-
-	game->cannon_sprite = cairo_image_surface_create_from_png("resource/Cannon.png");
 
 	int sprite_w = cairo_image_surface_get_width(game->cannon_sprite);
 	int sprite_h = cairo_image_surface_get_height(game->cannon_sprite);
 
 	double xA = centre_x - sprite_w/2, yA = centre_y - sprite_h/2;
 
-	cairo_identity_matrix (cr);
+	//cairo_identity_matrix (cr);
+	cairo_save(cr);
 	cairo_translate (cr, centre_x, centre_y);
 	cairo_rotate (cr, my->game.cannon_angle);
 	//cairo_scale (cr, 0.8, 0.8);
@@ -342,8 +346,112 @@ void draw_cannon(cairo_t * cr, gpointer data){
 	cairo_set_source_surface(cr, game->cannon_sprite, xA, yA);
 	cairo_rectangle(cr, xA, yA, sprite_w, sprite_h);
 	cairo_fill(cr);
+	cairo_restore(cr);
 
-	cairo_surface_destroy(game->cannon_sprite);
+	//cairo_surface_destroy(game->cannon_sprite);
+}
+
+void draw_munition(cairo_t * cr, gpointer data)
+{
+	Mydata * my = get_mydata(data);
+
+	int centre_x=my->area_w/2;
+	int centre_y=my->area_h/2;
+
+	Game * game = &my->game;
+
+	int sprite_w = cairo_image_surface_get_width(game->cannon_sprite);
+	int sprite_h = cairo_image_surface_get_height(game->cannon_sprite);
+
+	double xA = centre_x + sprite_w/2 + 130, yA = centre_y - sprite_h/2 -10;
+
+	sprite_w = cairo_image_surface_get_width(game->sprite_ball_table[game->current_shot]);
+	sprite_h = cairo_image_surface_get_height(game->sprite_ball_table[game->current_shot]);
+
+	//cairo_identity_matrix (cr);
+	cairo_save(cr);
+	cairo_translate (cr, centre_x, centre_y);
+	cairo_rotate (cr, my->game.cannon_angle);
+	cairo_scale (cr, 0.35, 0.35);
+	cairo_translate (cr, -centre_x, -centre_y);
+
+	cairo_set_source_surface(cr, game->sprite_ball_table[game->current_shot], xA, yA);
+	cairo_rectangle(cr, xA, yA, sprite_w, sprite_h);
+	cairo_fill(cr);
+
+	cairo_restore(cr);
+
+	//cairo_surface_destroy(game->sprite_ball_table[randomized_val]);
+}
+void draw_next_munition(cairo_t * cr, gpointer data)
+{
+	Mydata * my = get_mydata(data);
+
+	int centre_x=my->area_w/2;
+	int centre_y=my->area_h/2;
+
+	Game * game = &my->game;
+
+	int sprite_w = cairo_image_surface_get_width(game->cannon_sprite);
+	int sprite_h = cairo_image_surface_get_height(game->cannon_sprite);
+
+	double xA = centre_x - 14.5*(sprite_w/10), yA = centre_y - sprite_h - 150;
+
+	sprite_w = cairo_image_surface_get_width(game->sprite_ball_table[game->next_shot]);
+	sprite_h = cairo_image_surface_get_height(game->sprite_ball_table[game->next_shot]);
+
+	//cairo_identity_matrix (cr);
+	cairo_save(cr);
+	cairo_translate (cr, centre_x, centre_y);
+	cairo_rotate (cr, my->game.cannon_angle);
+	cairo_scale (cr, 0.15, 0.15);
+	cairo_translate (cr, -centre_x, -centre_y);
+
+	cairo_set_source_surface(cr, game->sprite_ball_table[game->next_shot], xA, yA);
+	cairo_rectangle(cr, xA, yA, sprite_w, sprite_h);
+	cairo_fill(cr);
+
+	cairo_restore(cr);
+
+	//cairo_surface_destroy(game->sprite_ball_table[randomized_val]);
+}
+
+void draw_shots(cairo_t * cr, gpointer data)
+{
+	Mydata * my = get_mydata(data);
+
+	int centre_x=my->area_w/2;
+	int centre_y=my->area_h/2;
+
+	Game * game = &my->game;
+
+	for (int i = 0; i < game->nb_shot_on_screen ; ++i)
+	{
+		Shot * shot = &game->shot_table[i];
+
+		int sprite_w = cairo_image_surface_get_width(game->sprite_ball_table[shot->shot_color]);
+		int sprite_h = cairo_image_surface_get_height(game->sprite_ball_table[shot->shot_color]);
+
+		cairo_save(cr);
+		cairo_translate (cr, centre_x, centre_y);
+		//cairo_rotate (cr, my->game.cannon_angle);
+		cairo_scale (cr, 0.35, 0.35);
+		cairo_translate (cr, -centre_x, -centre_y);
+	
+		cairo_set_source_surface(cr, game->sprite_ball_table[shot->shot_color], shot->x, shot->y);
+		cairo_rectangle(cr, shot->x, shot->y, sprite_w, sprite_h);
+		cairo_fill(cr);
+		cairo_restore(cr);
+	}
+}
+
+gboolean on_timeout_1(gpointer data)
+{
+	Mydata * my = get_mydata(data);
+
+	process_next_step(my);
+	refresh_area(my->area);
+	return TRUE;
 }
 
 gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
@@ -413,7 +521,11 @@ gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
 	//g_sprintf(msg,"on area draw: %dx%d",gtk_widget_get_allocated_width(my->area),gtk_widget_get_allocated_width(my->area));
 	//set_status(my->status,msg);
 
+	draw_shots(cr, my);
+	draw_munition(cr, my);
+	draw_next_munition(cr, my);
 	draw_cannon(cr, my);
+
 	return TRUE;
 }
 
@@ -487,6 +599,10 @@ gboolean on_area_key_press (GtkWidget *area, GdkEvent *event, gpointer data){
 		break;
 	case GDK_KEY_plus:
 		break;
+	case GDK_KEY_space:
+		switch_ammo(my);
+		refresh_area(area);
+		break;
 	}
 
 	return TRUE;
@@ -500,6 +616,8 @@ gboolean on_area_key_release (GtkWidget *area, GdkEvent *event, gpointer data){
 
 gboolean on_area_button_press (GtkWidget *area, GdkEvent *event, gpointer data){
 	Mydata *my = get_mydata(data);
+
+	Game * game = &my->game;
 
 	GdkEventButton *evb = &event->button;
 
@@ -574,6 +692,18 @@ gboolean on_area_button_press (GtkWidget *area, GdkEvent *event, gpointer data){
 				break;
 			default:
 				break;	
+		}
+	}
+
+	if(my->click_n == 1 && game->game_state)
+	{
+		switch(game->game_state)
+		{
+			case GS_PLAYING:
+				fire(my);
+				break;
+			default:
+				break;
 		}
 	}
 	printf ("%s: %d %.1f %.1f\n", __func__, evb->button, evb->x, evb->y);
@@ -662,6 +792,16 @@ gboolean on_area_leave_notify (GtkWidget *area, GdkEvent *event, gpointer data){
 	return TRUE;
 }
 
+gboolean on_area_size_allocate(GtkWidget * area, GdkRectangle * rect, gpointer data)
+{
+	Mydata * my = get_mydata(data);
+
+	my->area_w = rect->width;
+	my->area_h = rect->height;
+
+	return TRUE;
+}
+
 void area_init(gpointer data){
 	Mydata * my = get_mydata(data);
 
@@ -677,6 +817,7 @@ void area_init(gpointer data){
 	g_signal_connect (my->area, "motion-notify-event", G_CALLBACK(on_area_motion_notify), my);
 	g_signal_connect (my->area, "enter-notify-event", G_CALLBACK(on_area_enter_notify), my);
 	g_signal_connect (my->area, "leave-notify-event", G_CALLBACK(on_area_leave_notify), my);
+	g_signal_connect (my->area, "size-allocate", G_CALLBACK(on_area_size_allocate), my);
 
 	gtk_widget_add_events (my->area,
 	GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK |

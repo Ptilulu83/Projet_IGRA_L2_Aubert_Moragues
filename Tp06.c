@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
-
+#include <stdlib.h>
+#include <time.h>
 
 #include "curve.h"
 #include "util.h"
@@ -25,6 +26,8 @@ void on_app_activate (GtkApplication * app, gpointer user_data){
 	layout_init(my);
 
 	win_scale_init(my);
+	
+	g_timeout_add(20, on_timeout_1, my);
 
 	gtk_widget_show_all (my->window);
 
@@ -33,7 +36,9 @@ void on_app_activate (GtkApplication * app, gpointer user_data){
 
 int main (int argc, char *argv[]){
 	Mydata my;
+	srand(time(NULL));
 	init_mydata(&my);
+	
 	
 
 	GtkApplication *app;

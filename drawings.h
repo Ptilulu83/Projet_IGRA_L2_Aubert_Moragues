@@ -17,6 +17,11 @@ void generate_bezier_path(cairo_t *cr, Control bez_pts[4], double theta, int is_
 void draw_bezier_curves_fill(cairo_t *cr , Curve_infos *ci , double theta);
 void draw_bezier_curves_clip(cairo_t *cr , Curve_infos *ci , double theta, gpointer data);
 void draw_cannon(cairo_t * cr, gpointer data);
+void draw_munition(cairo_t*, gpointer);
+void draw_next_munition(cairo_t*, gpointer);
+void draw_shots(cairo_t*, gpointer);
+
+gboolean on_timeout_1(gpointer data);
 
 void area_init(gpointer data);
 #endif
