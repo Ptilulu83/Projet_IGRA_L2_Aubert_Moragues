@@ -36,6 +36,7 @@ typedef struct
 typedef struct {
   double x, y;      // coordonnées centre
   double t;         // paramètre dans l'échantillonnage
+
   int color;
   int is_combo_end; // ou encore, facteur vitesse et direction ?
   int step_explode;
@@ -43,23 +44,30 @@ typedef struct {
 
 typedef struct {
   int    sample_count;          // échantillonnage courbe
+
   double sample_x[SAMPLE_MAX], 
          sample_y[SAMPLE_MAX];
+
   int marble_count;
   int first_visible;
+
   Marble marbles[MARBLE_MAX];
+
   Track_state state;
 } Track;
 
 typedef struct {
   int track_count;
+
   Track tracks[TRACK_MAX];
 } Track_list;
 
 
 typedef struct {
   Curve_infos curve_infos;
+
   double canon_x, canon_y;
+
   int marbles_intro, marbles_total;
 } Level;
 

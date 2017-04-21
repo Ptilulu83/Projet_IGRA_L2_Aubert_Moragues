@@ -37,8 +37,11 @@ void sample_curve_to_track (Curve *curve, Track *track, double theta)
 {
 	Control bez_points[4];
 	int ind = 0;
+
 	if (curve->control_count < 2) return;
+
 	for (int k = 0; k < curve->control_count+1; k++) {
+
 		if (k<2 || k>curve->control_count-2){
 			compute_bezier_points_prolong(curve,k,bez_points);
 		}
@@ -52,6 +55,7 @@ void sample_curve_to_track (Curve *curve, Track *track, double theta)
 			sample_bezier_curve (bez_points, theta, track->sample_x, track->sample_y, &ind, SAMPLE_MAX, 0);
 		}		
 	}
+	
 	track->sample_count = ind;
 }
 
@@ -60,8 +64,11 @@ void convert_all_curve_to_track(gpointer data){
 
 	Curve_list * curve_list = &my->curve_infos.curve_list;
 	Track_list * track_list = &my->game.track_list;
+
 	track_list->track_count = curve_list->curve_count;
+
 	printf("%d courbe \n", track_list->track_count);
+
 	for (int i = 0; i < curve_list->curve_count; ++i){
 		sample_curve_to_track (&curve_list->curves[i], &track_list->tracks[i],SAMPLE_THETA);
 	}
