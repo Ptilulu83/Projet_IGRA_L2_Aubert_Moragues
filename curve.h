@@ -1,7 +1,7 @@
 #ifndef CURVE_H
 #define CURVE_H
 
-#define CONTROL_MAX 200
+#define CONTROL_MAX 100
 #define CURVE_MAX 100
 
 typedef struct{

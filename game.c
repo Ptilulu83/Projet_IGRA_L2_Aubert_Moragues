@@ -27,9 +27,10 @@ void game_init(Game * game)
 
 	game->nb_shot_on_screen = 0;
 
-	game->correction_angle=(3.1415926/180.)*4;
+	game->correction_angle=(G_PI/180.)*4;
+	game->ball_rotation=0.0;
+	game->shot_speed = 1.0;
 
-	game->shot_speed = 15.0;
 }
 
 void sample_curve_to_track (Curve *curve, Track *track, double theta)
@@ -52,6 +53,18 @@ void sample_curve_to_track (Curve *curve, Track *track, double theta)
 		}		
 	}
 	track->sample_count = ind;
+}
+
+void convert_all_curve_to_track(gpointer data){
+	Mydata *my = get_mydata(data);
+
+	Curve_list * curve_list = &my->curve_infos.curve_list;
+	Track_list * track_list = &my->game.track_list;
+	track_list->track_count = curve_list->curve_count;
+	printf("%d courbe \n", track_list->track_count);
+	for (int i = 0; i < curve_list->curve_count; ++i){
+		sample_curve_to_track (&curve_list->curves[i], &track_list->tracks[i],SAMPLE_THETA);
+	}
 }
 
 void udapte_cannon_angle(gpointer data){
@@ -82,8 +95,8 @@ void fire(gpointer data)
 
 	if (game->nb_shot_on_screen < SHOT_LIMIT)
 	{
-		int centre_x=my->area_w/2;
-		int centre_y=my->area_h/2;
+		// int centre_x=my->area_w/2;
+		// int centre_y=my->area_h/2;
 
 		Game * game = &my->game;
 
@@ -92,8 +105,8 @@ void fire(gpointer data)
 		int spriteb_w = cairo_image_surface_get_width(game->sprite_ball_table[0]);
 		int spriteb_h = cairo_image_surface_get_height(game->sprite_ball_table[0]);
 
-		double xA = centre_x - spriteb_w/2 + (sprite_w/2 + spriteb_w/2 + 130) * cos(game->cannon_angle - game->correction_angle);
-		double yA = centre_y - spriteb_h/2 + (sprite_w/2 + spriteb_w/2 + 130) * sin(game->cannon_angle - game->correction_angle);
+		double xA = ((sprite_w/2 + 200) * cos(game->cannon_angle - game->correction_angle) - spriteb_w/2)*0.17;
+		double yA = ((sprite_w/2 + 200) * sin(game->cannon_angle - game->correction_angle) - spriteb_h/2)*0.17;
 		
 		game->shot_table[game->nb_shot_on_screen].dirx = cos(game->cannon_angle);
 		game->shot_table[game->nb_shot_on_screen].diry = sin(game->cannon_angle);
@@ -142,7 +155,10 @@ void process_next_step(gpointer data)
 	Mydata * my = get_mydata(data);
 
 	Game * game = &my->game;
-
+	game->ball_rotation+=(G_PI/180.)*5;
+	if(game->ball_rotation > 360){
+		game->ball_rotation-=360;
+	}
 	int spriteb_w = cairo_image_surface_get_width(game->sprite_ball_table[0]);
 	int spriteb_h = cairo_image_surface_get_height(game->sprite_ball_table[0]);
 
@@ -153,10 +169,13 @@ void process_next_step(gpointer data)
 		shot->x += shot->dirx*game->shot_speed;
 		shot->y += shot->diry*game->shot_speed;
 
-		if (((shot->x < -my->area_w - spriteb_w) || (shot->x > my->area_w*2)) || ((shot->y < -my->area_h-spriteb_h) || (shot->y > my->area_h*2)))
+		if (shot->x < -(my->area_w/2 + spriteb_w*0.2 ) || shot->x > (my->area_w/2 + spriteb_w*0.2 ) || shot->y < -(my->area_h/2 + spriteb_h*0.2 ) || shot->y > (my->area_h/2 + spriteb_h*0.2 ) )
 		{
 			printf("Désinstanciation du tir %d\n", i);
 			int res = remove_shot(game, i);
+			if(res == -1 ){
+
+			}
 		}
 	}
 }

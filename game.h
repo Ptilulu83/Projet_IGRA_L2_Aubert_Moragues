@@ -79,17 +79,19 @@ typedef struct
 	Shot shot_table[SHOT_LIMIT];
 	int nb_shot_on_screen;
 
-	
+	Track_list track_list;
 
 	int current_shot;
 	int next_shot;
 	double cannon_angle;
+	double ball_rotation;
 	double correction_angle;
 	double shot_speed;
 
 }Game;
 
 void game_init(Game *);
+void convert_all_curve_to_track(gpointer data);
 void udapte_cannon_angle(gpointer);
 void fire(gpointer);
 void switch_ammo(gpointer);

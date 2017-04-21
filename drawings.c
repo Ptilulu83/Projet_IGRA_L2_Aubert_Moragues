@@ -266,6 +266,22 @@ void draw_bezier_curves_prolong(cairo_t *cr , Curve_infos *ci , double theta){
 	}
 }
 
+void draw_tracks(cairo_t *cr , Track_list *track_list){
+	for (int k = 5; k > 0; --k){
+		cairo_set_source_rgb(cr,20*(5-k)/255., 20*(5-k)/255., 20*(5-k)/255.);
+		cairo_set_line_width (cr, 2*k);
+		for (int i = 0; i < track_list->track_count; ++i){
+			Track * track = &track_list->tracks[i];
+			for (int j = 0; j < track->sample_count-1; ++j){
+				cairo_move_to(cr , track->sample_x[j], track->sample_y[j]);
+				cairo_line_to(cr , track->sample_x[j+1], track->sample_y[j+1]);
+				cairo_stroke(cr);
+			}
+		}
+	}
+}
+
+/*
 void draw_bezier_curves_prolong_game(cairo_t *cr , Curve_infos *ci , double theta){
 	Control bez_pts[4];
 	for (int i = 0; i < ci->curve_list.curve_count; ++i){
@@ -287,6 +303,7 @@ void draw_bezier_curves_prolong_game(cairo_t *cr , Curve_infos *ci , double thet
 		}
 	}
 }
+*/
 
 void generate_bezier_path(cairo_t *cr, Control bez_points[4], double theta, int is_first){
 	double bx[4], by[4];
@@ -359,7 +376,7 @@ void draw_cannon(cairo_t * cr, gpointer data){
 	cairo_save(cr);
 	cairo_translate (cr, centre_x, centre_y);
 	cairo_rotate (cr, my->game.cannon_angle);
-	//cairo_scale (cr, 0.8, 0.8);
+	cairo_scale (cr, 0.5, 0.5);
 	cairo_translate (cr, -centre_x, -centre_y);
 
 	cairo_set_source_surface(cr, game->cannon_sprite, xA, yA);
@@ -379,25 +396,23 @@ void draw_munition(cairo_t * cr, gpointer data)
 
 	Game * game = &my->game;
 
-	int sprite_w = cairo_image_surface_get_width(game->cannon_sprite);
-	int sprite_h = cairo_image_surface_get_height(game->cannon_sprite);
+	int sprite_cannon_w = cairo_image_surface_get_width(game->cannon_sprite);
+	//int sprite_cannon_h = cairo_image_surface_get_height(game->cannon_sprite);
 
+	int sprite_ball_w = cairo_image_surface_get_width(game->sprite_ball_table[game->current_shot]);
+	int sprite_ball_h = cairo_image_surface_get_height(game->sprite_ball_table[game->current_shot]);
 
-	double xA = centre_x + sprite_w/2 + 130, yA = centre_y - sprite_h/2 -10;
-
-
-	sprite_w = cairo_image_surface_get_width(game->sprite_ball_table[game->current_shot]);
-	sprite_h = cairo_image_surface_get_height(game->sprite_ball_table[game->current_shot]);
+	double xA = centre_x + sprite_cannon_w/2 - sprite_ball_w/2 + 200, yA = centre_y - sprite_ball_h/2 -18;
 
 	//cairo_identity_matrix (cr);
 	cairo_save(cr);
 	cairo_translate (cr, centre_x, centre_y);
 	cairo_rotate (cr, my->game.cannon_angle);
-	cairo_scale (cr, 0.35, 0.35);
+	cairo_scale (cr, 0.17, 0.17);
 	cairo_translate (cr, -centre_x, -centre_y);
 
 	cairo_set_source_surface(cr, game->sprite_ball_table[game->current_shot], xA, yA);
-	cairo_rectangle(cr, xA, yA, sprite_w, sprite_h);
+	cairo_rectangle(cr, xA, yA, sprite_ball_w, sprite_ball_h);
 	cairo_fill(cr);
 
 	cairo_restore(cr);
@@ -413,23 +428,23 @@ void draw_next_munition(cairo_t * cr, gpointer data)
 
 	Game * game = &my->game;
 
-	int sprite_w = cairo_image_surface_get_width(game->cannon_sprite);
-	int sprite_h = cairo_image_surface_get_height(game->cannon_sprite);
+	//int sprite_cannon_w = cairo_image_surface_get_width(game->cannon_sprite);
+	int sprite_cannon_h = cairo_image_surface_get_height(game->cannon_sprite);
 
-	double xA = centre_x - 14.5*(sprite_w/10), yA = centre_y - sprite_h - 150;
+	int sprite_ball_w = cairo_image_surface_get_width(game->sprite_ball_table[game->current_shot]);
+	int sprite_ball_h = cairo_image_surface_get_height(game->sprite_ball_table[game->current_shot]);
 
-	sprite_w = cairo_image_surface_get_width(game->sprite_ball_table[game->next_shot]);
-	sprite_h = cairo_image_surface_get_height(game->sprite_ball_table[game->next_shot]);
+	double xA = centre_x - sprite_ball_w/2 - 190 , yA = centre_y -sprite_cannon_h/2 - sprite_ball_h/2 - 100;
 
 	//cairo_identity_matrix (cr);
 	cairo_save(cr);
 	cairo_translate (cr, centre_x, centre_y);
 	cairo_rotate (cr, my->game.cannon_angle);
-	cairo_scale (cr, 0.15, 0.15);
+	cairo_scale (cr, 0.10, 0.10);
 	cairo_translate (cr, -centre_x, -centre_y);
 
 	cairo_set_source_surface(cr, game->sprite_ball_table[game->next_shot], xA, yA);
-	cairo_rectangle(cr, xA, yA, sprite_w, sprite_h);
+	cairo_rectangle(cr, xA, yA, sprite_ball_w, sprite_ball_h);
 	cairo_fill(cr);
 
 	cairo_restore(cr);
@@ -450,17 +465,19 @@ void draw_shots(cairo_t * cr, gpointer data)
 	{
 		Shot * shot = &game->shot_table[i];
 
-		int sprite_w = cairo_image_surface_get_width(game->sprite_ball_table[shot->shot_color]);
-		int sprite_h = cairo_image_surface_get_height(game->sprite_ball_table[shot->shot_color]);
-
+		int sprite_ball_w = cairo_image_surface_get_width(game->sprite_ball_table[game->current_shot]);
+		int sprite_ball_h = cairo_image_surface_get_height(game->sprite_ball_table[game->current_shot]);
+		int tmpx= shot->x+centre_x + (sprite_ball_w/2)*0.17;
+		int tmpy= shot->y+centre_y + (sprite_ball_h/2)*0.17;
 		cairo_save(cr);
-		cairo_translate (cr, centre_x, centre_y);
-		//cairo_rotate (cr, my->game.cannon_angle);
-		cairo_scale (cr, 0.35, 0.35);
-		cairo_translate (cr, -centre_x, -centre_y);
+		cairo_translate (cr, tmpx, tmpy);
+		cairo_scale (cr, 0.17, 0.17);
+		cairo_rotate (cr, my->game.ball_rotation);
+		
+		cairo_translate (cr, -tmpx, -tmpy);
 	
-		cairo_set_source_surface(cr, game->sprite_ball_table[shot->shot_color], shot->x, shot->y);
-		cairo_rectangle(cr, shot->x, shot->y, sprite_w, sprite_h);
+		cairo_set_source_surface(cr, game->sprite_ball_table[shot->shot_color], tmpx - (sprite_ball_w/2), tmpy - (sprite_ball_h/2));
+		cairo_rectangle(cr, tmpx - (sprite_ball_w/2), tmpy - (sprite_ball_h/2), sprite_ball_w, sprite_ball_h);
 		cairo_fill(cr);
 		cairo_restore(cr);
 	}
@@ -542,7 +559,7 @@ gboolean on_area_draw(GtkWidget * widget,cairo_t * cr, gpointer data){
 		}
 	}
 	else{
-		draw_bezier_curves_prolong_game(cr,&my->curve_infos,0.1);
+		draw_tracks(cr, &my->game.track_list);
 	}
 
 	//char msg[200];

@@ -208,6 +208,7 @@ void on_editing_activate (GtkCheckMenuItem *widget, gpointer data){
 	else {
 		set_status(my->status, "Editing is off");
 		gtk_widget_hide(my->frame);
+		convert_all_curve_to_track(my);
 		my->game.game_state=GS_PLAYING;
 	}
 }
